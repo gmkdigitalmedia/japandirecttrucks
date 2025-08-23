@@ -3,17 +3,18 @@ import Joi from 'joi';
 import { logger } from '@/utils/logger';
 
 export const validateRequest = (schema: Joi.ObjectSchema) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
     const { error } = schema.validate(req.body);
     
     if (error) {
       const errorMessage = error.details.map(detail => detail.message).join(', ');
       logger.warn('Validation error:', errorMessage);
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Validation error',
         details: errorMessage
       });
+      return;
     }
     
     next();
