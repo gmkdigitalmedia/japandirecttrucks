@@ -1,16 +1,16 @@
 services:
   # Database
-  postgres:
+  postgres-dev:
     image: postgres:15-alpine
-    container_name: gps-trucks-db
+    container_name: gps-trucks-db-dev
     environment:
-      POSTGRES_DB: gps_trucks_japan
+      POSTGRES_DB: gps_trucks_japan_dev
       POSTGRES_USER: gp
       POSTGRES_PASSWORD: Megumi12
     ports:
-      - "5432:5432"
+      - "5433:5432"  # Different port to avoid conflicts
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_dev_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
@@ -18,97 +18,97 @@ services:
       timeout: 10s
       retries: 3
     networks:
-      - gps-network
+      - gps-dev-network
 
   # Redis for caching
-  redis:
+  redis-dev:
     image: redis:7-alpine
-    container_name: gps-trucks-redis
+    container_name: gps-trucks-redis-dev
     ports:
-      - "6379:6379"
+      - "6380:6379"  # Different port to avoid conflicts
     volumes:
-      - redis_data:/data
+      - redis_dev_data:/data
     networks:
-      - gps-network
+      - gps-dev-network
 
   # Backend API
-  backend:
+  backend-dev:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: gps-trucks-backend
+    container_name: gps-trucks-backend-dev
     environment:
-      NODE_ENV: production
-      DATABASE_URL: postgres://gp:Megumi12@postgres:5432/gps_trucks_japan
-      DB_HOST: postgres
+      NODE_ENV: development
+      DATABASE_URL: postgres://gp:Megumi12@postgres-dev:5432/gps_trucks_japan_dev
+      DB_HOST: postgres-dev
       DB_PORT: 5432
-      DB_NAME: gps_trucks_japan
+      DB_NAME: gps_trucks_japan_dev
       DB_USER: gp
       DB_PASSWORD: Megumi12
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: gps-trucks-japan-super-secret-jwt-key-2024
+      REDIS_URL: redis://redis-dev:6379
+      JWT_SECRET: gps-trucks-japan-super-secret-jwt-key-2024-dev
       PORT: 3002
     ports:
       - "3002:3002"
     volumes:
-      # - ./backend:/app
-      # - /app/node_modules
+      - ./backend:/app  # Live code reloading for development
+      - /app/node_modules
       - ./images:/app/public/images
     depends_on:
-      postgres:
+      postgres-dev:
         condition: service_healthy
-      redis:
+      redis-dev:
         condition: service_started
     networks:
-      - gps-network
-    command: node simple-server.js
+      - gps-dev-network
+    command: npm run dev  # Use dev command for hot reloading
 
   # Frontend
-  frontend:
+  frontend-dev:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: gps-trucks-frontend
+    container_name: gps-trucks-frontend-dev
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3002
-      NODE_ENV: production
+      NODE_ENV: development
     ports:
       - "3000:3000"
     volumes:
-      - ./frontend:/app
+      - ./frontend:/app  # Live code reloading for development
       - /app/node_modules
       - /app/.next
     depends_on:
-      - backend
+      - backend-dev
     networks:
-      - gps-network
+      - gps-dev-network
     command: npm run dev
 
   # Admin Panel
-  admin:
+  admin-dev:
     build:
       context: ./admin
       dockerfile: Dockerfile
-    container_name: gps-trucks-admin
+    container_name: gps-trucks-admin-dev
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3002
-      NODE_ENV: production
+      NODE_ENV: development
     ports:
       - "3001:3001"
     volumes:
-      - ./admin:/app
+      - ./admin:/app  # Live code reloading for development
       - /app/node_modules
       - /app/.next
     depends_on:
-      - backend
+      - backend-dev
     networks:
-      - gps-network
+      - gps-dev-network
     command: npm run dev
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres_dev_data:
+  redis_dev_data:
 
 networks:
-  gps-network:
+  gps-dev-network:
     driver: bridge
