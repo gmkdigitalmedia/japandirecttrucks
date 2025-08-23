@@ -1,0 +1,111 @@
+window.addEventListener("load", function(){
+	var noLinkflg = {
+		"SP":{
+			"D": "0",
+			"Y": "0",
+			"K": "0",
+			"H": "0",
+			"F": "0",
+			"S": "0",
+			"C": "0",
+			"P": "0"
+		},
+		"BT":{
+			"C": "0",
+			"M": "0",
+			"D": "0",
+			"W": "0",
+			"O": "0",
+			"X": "0",
+			"P": "0",
+			"S": "0",
+			"T": "0",
+			"N": "0"
+		},
+		"FUEL":{
+			"1": "0",
+			"2": "0",
+			"3": "0",
+			"4": "0",
+			"9": "0"
+		},
+		"KUDO":{
+			"4WD0": "0",
+			"4WD1": "0"
+		}
+	};
+
+	//aタグが存在しない場合はリンクなしフラグを立てる
+	for(var SPparam in noLinkflg.SP){
+		if(!document.getElementById("SPlink_" + SPparam)){
+				noLinkflg.SP[SPparam] = "1";
+		}		
+	}
+	for(var BTparam in noLinkflg.BT){
+		if(!document.getElementById("BTlink_" + BTparam)){
+				noLinkflg.BT[BTparam] = "1";
+		}		
+	}
+	for(var FUELparam in noLinkflg.FUEL){
+		if(!document.getElementById("FUELlink_" + FUELparam)){
+				noLinkflg.FUEL[FUELparam] = "1";
+		}		
+	}
+	for(var KUDOparam in noLinkflg.KUDO){
+		if(!document.getElementById("KUDOlink_" + KUDOparam)){
+				noLinkflg.KUDO[KUDOparam] = "1";
+		}		
+	}
+
+	var JSONnoLinkflg = JSON.stringify(noLinkflg);
+    var formDatas = document.forms["panelForm"];
+	var url = new URL(window.location.href);
+	var GETparams = url.searchParams;
+	var CLparam = GETparams.getAll('CL'); //色情報のみ一部formから取得できない場合があるのでgetから取得
+
+    var postData = {"panelForm": $(formDatas).serialize(), "noLinkFlg": JSONnoLinkflg, "CL":CLparam};
+    
+    const data = postData;
+
+$.ajax({
+    type: "POST", 
+    url: "/usedcar/searchPanel_nofollow.php", 
+    data: { 'data': data }, 
+    scriptCharset: 'utf-8'
+})
+.done(
+    function(result){　 
+			if(!result) return false;
+            //サーバーからのレスポンス取得      
+            var strResult = JSON.stringify(result);
+            var nofollowFlg = JSON.parse(strResult);
+
+			//nofollowフラグが1の場合aタグにnofollowを付与
+			for(var SPnofollowFlg in nofollowFlg.SP){
+				if(nofollowFlg.SP[SPnofollowFlg] == "1"){
+					document.getElementById("SPlink_" + SPnofollowFlg).setAttribute("rel", "nofollow");
+				}
+			}
+			for(var BTnofollowFlg in nofollowFlg.BT){
+				if(nofollowFlg.BT[BTnofollowFlg] == "1"){
+					document.getElementById("BTlink_" + BTnofollowFlg).setAttribute("rel", "nofollow");
+				}
+			}
+			for(var FUELnofollowFlg in nofollowFlg.FUEL){
+				if(nofollowFlg.FUEL[FUELnofollowFlg] == "1"){
+					document.getElementById("FUELlink_" + FUELnofollowFlg).setAttribute("rel", "nofollow");
+				}
+			}
+			for(var KUDOnofollowFlg in nofollowFlg.KUDO){
+                
+				if(nofollowFlg.KUDO[KUDOnofollowFlg] == "1"){
+					document.getElementById("KUDOlink_" + KUDOnofollowFlg).setAttribute("rel", "nofollow");
+				}
+			}
+    })
+.fail(
+    function(jqXHR, textStatus, errorThrown){
+
+});
+
+}, false);

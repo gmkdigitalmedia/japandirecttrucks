@@ -1,0 +1,49 @@
+$(function() {
+    if (window.navigator.userAgent.toLowerCase().indexOf("msie") != -1) {
+        if (window.navigator.appVersion.toLowerCase().indexOf("msie 6.") != -1) {
+            return false;
+        }
+    }
+    var isViewFlg = 1;
+    
+    $(window).scroll(function () {
+        if(isViewFlg == 0) return;
+        var winTop = $(this).scrollTop();
+        if ($(this).scrollTop() > 10) {
+            $('#tm_ftr').slideDown(200);
+            isViewFlg = 0;
+        }
+    });
+    $("#barCsaTxt,#barCsaImg").mouseover(function() {
+        var sImg = $("#barCsaImg").attr("src");
+        var lImg = sImg.replace("d_popup_off_m.png", "d_popup_off.png");
+        $("#barCsaImg").attr("src", lImg);
+    });
+    $("#barCsaTxt,#barCsaImg").mouseout(function() {
+        var lImg = $("#barCsaImg").attr("src");
+        var sImg = lImg.replace("d_popup_off.png", "d_popup_off_m.png");
+        $("#barCsaImg").attr("src", sImg);
+    });
+    $("#barClose").click(function() {
+    	setCookie();
+    });
+    $("#barCsaTxt").click(function() {
+    	setCookie();
+    });
+})
+ 
+function setCookie() {
+	limit = new Date(); 
+	limit.setTime(limit.getTime()+(30*24*60*60*1000));
+	limit = limit.toGMTString();
+	document.cookie = "PC_STOP_DIRECT_BANNER=1;path=/;expires="+limit + getDomain();
+	
+    isViewFlg = 0;
+    $("#tm_ftr").css("display", "none");
+}
+
+function getDomain() {
+	if(location.host.match(/\.carsensor\.net/)){
+		return ";domain=.carsensor.net;";
+	}
+}

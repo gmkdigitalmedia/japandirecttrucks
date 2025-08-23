@@ -1,0 +1,345 @@
+/****************************************
+* reqVosFedDirect
+* 直売ページ内リンク測定（PC）
+*****************************************/
+function reqVosFedDirect(fed, pageid) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqVosFedDirect:"+fed+"/"+pageid);return;
+	}
+
+	var pageid_opt = pageid || ""; 
+	
+	/* 初期化 */
+	s=s_gi(s_account);
+	
+/******* ↓ここから下に送信したいパラメータを設定すること ********/
+	if(pageid_opt.length > 0){
+		s.pageName=pageid_opt;
+	}
+	s.prop27=fed;
+	s.eVar27=fed;
+	
+/******* ↑ここまでに送信したいパラメータを設定すること ********/
+	/* 送信 */
+	s.t();
+}
+
+/****************************************
+* reqEventPC
+* イベントのみ出力（PC）
+*****************************************/
+function reqEventPC(e) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqEventPC:"+e);return;
+	}
+
+	/* 別変数に値渡し */
+	var s2=s_gi(s_account);
+	for (var member in s) { s2[member] = s[member]; }
+
+	s2.linkTrackVars="events"; s2.linkTrackEvents=e; s2.events=e;
+	s2.tl(this,'o',e);
+}
+/****************************************
+* reqEvent2ActPC
+* イベントのみ出力
+*****************************************/
+function reqEvent2ActPC(e,cb) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqEvent:"+e);
+		if(typeof(cb)=="function"){cb();}
+		return;
+	}
+
+	s=s_gi(s_account);
+
+	s.linkTrackVars="events"; s.linkTrackEvents=e; s.events=e;
+	s.tl(this,'o',e,null,cb);
+}
+
+/****************************************
+* reqVosFedDirectPageName
+* 直売指定画面ID送信（PC）
+*****************************************/
+function reqVosFedDirectPageName(pageid) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqVosFedDirectPageName:"+pageid);return;
+	}
+
+	/* 初期化 */
+	
+	s=s_gi(s_account);
+	
+/******* ↓ここから下に送信したいパラメータを設定すること ********/
+
+	s.pageName=pageid;
+
+/******* ↑ここまでに送信したいパラメータを設定すること ********/
+	/* 送信 */
+	s.t();
+}
+
+/****************************************
+* reqVosVarPC
+* 特定変数を出力
+*****************************************/
+function reqVosVarPC(en,ev,pn,pv) {
+	if(typeof(s_gi)!="function"){
+		var log="";
+		if(en&&ev)log+=en+"="+ev;
+		if(pn&&pv)log+=" "+pn+"="+pv;
+		console.log("reqVosVarPC:"+log);return;
+	}
+
+	var ltv="";
+	/* 初期化 */
+	s=s_gi(s_account);
+
+	if(en&&ev){
+		ltv+=en;
+		s[en]=ev;
+	}
+	if(pn&&pv){
+		ltv+=(ltv)?','+pn:pn;
+		s[pn]=pv;
+	}
+
+	if(ltv){
+		s.linkTrackVars=ltv;
+		s.tl(this,'o',ltv);
+	}
+}
+
+/****************************************
+* reqVosVar2ActPC
+* 特定変数を出力
+*****************************************/
+function reqVosVar2ActPC(en,ev,pn,pv,cb) {
+	if(typeof(s_gi)!="function"){
+		var log="";
+		if(en&&ev)log+=en+"="+ev;
+		if(pn&&pv)log+=" "+pn+"="+pv;
+		console.log("reqVosVarPC:"+log);cb();return;
+	}
+
+	var ltv="";
+	/* 初期化 */
+	s=s_gi(s_account);
+
+	if(en&&ev){
+		ltv+=en;
+		s[en]=ev;
+	}
+	if(pn&&pv){
+		ltv+=(ltv)?','+pn:pn;
+		s[pn]=pv;
+	}
+
+	if(ltv){
+		s.linkTrackVars=ltv;
+		s.tl(this,'o',ltv,null,cb);
+	}
+}
+
+/****************************************
+* reqVosVarsPC
+* 特定変数を出力(複数出力用)
+*****************************************/
+function reqVosVarsPC(target) {
+	if (!target) return;
+	if(typeof(s_gi)!="function"){
+		var log="";
+		for( var key in target) {
+			if( target.hasOwnProperty(key) ) {
+				log+=key+"="+target[key]+";";
+			}
+		}
+		console.log("reqVosVarsPC:"+log);return;
+	}
+
+	var ltv="";
+	/* 初期化 */
+	var s2=s_gi(s_account);
+	for (var member in s) { s2[member] = s[member]; }
+
+	for( var key in target) {
+		ltv+=(ltv)?','+key:key;
+		if( target.hasOwnProperty(key) ) {
+			s2[key] = target[key];
+		}
+	}
+
+	if(ltv){
+		s2.linkTrackVars=ltv;
+		s2.tl(this,'o',ltv);
+	}
+}
+
+/****************************************
+* reqVosCustomPC
+* アクション計測関数
+*****************************************/
+function reqVosCustomPC(STID, p) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqVosCustom:"+STID);return;
+	}
+
+	/* 初期化 */
+	s=s_gi(s_account);
+	
+/******* ↓ここから下に送信したいパラメータを設定すること ********/
+
+	for (var member in s){
+		if(!member.match(/prop/) && !member.match(/eVar/)) continue;
+		if(typeof s[member] === "undefined") continue;
+		s[member] = s[member].toString().replace(/CS[A-Z0-9]{6}/,STID);
+	}
+
+	s.pageName=s.eVar1=STID;
+	for (var member in p){s[member] = p[member];}
+
+/******* ↑ここまでに送信したいパラメータを設定すること ********/
+	/* 送信 */
+	s.t();
+}
+
+/****************************************
+* reqVosSearchDirectPC
+* 直売ページ内検索時測定（PC）
+*****************************************/
+function reqVosSearchDirectPC(strParam, strFw , fedcode , pageid) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqVosSearchDirectPC:"+strParam);
+		console.log("reqVosSearchDirectPC:"+strFw);
+		console.log("reqVosSearchDirectPC:" + fedcode);
+		return;
+	}
+
+	var pageid_opt = pageid || "";
+
+	/* 初期化 */
+	
+	s=s_gi(s_account);
+	
+/******* ↓ここから下に送信したいパラメータを設定すること ********/
+	// 検索条件
+	s.eVar82=strParam;
+	s.eVar83=strFw;
+	// fedコード
+	if(pageid_opt.length > 0){
+		s.pageName=pageid_opt;
+	}
+	s.prop27=fedcode;
+	s.eVar27=fedcode;
+	
+/******* ↑ここまでに送信したいパラメータを設定すること ********/
+	/* 送信 */
+	s.t();
+}
+
+function reqCustomLink(v,e,n) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqCustomLink:linkTrackVars="+v+",linkTrackEvents="+e+",name="+n);return;
+	}
+
+	/* 初期化 */
+	s=s_gi(s_account);
+
+	s.linkTrackVars=v;
+	s.linkTrackEvents=e;
+	s.tl(this,'o',n);
+}
+
+/****************************************
+* reqVosV2(SPからコピー)
+* アクション計測関数(既存オブジェクト上書かない版)
+*****************************************/
+function reqVosV2(STID) {
+	if(typeof(s_gi)!="function"){
+		console.log("reqVosV2:"+STID);return;
+	}
+
+	/* 初期化 */
+	s=s_gi(s_account);
+
+	/* 別変数に値渡し */
+	var s2=s_gi(s_account);
+	for (var member in s) { s2[member] = s[member]; }
+
+/******* ↓ここから下に送信したいパラメータを設定すること ********/
+
+	for (var member in s){
+		if(!member.match(/prop/) && !member.match(/eVar/)){
+			s2[member] = s[member];
+		} else{
+			if(typeof s2[member] === "undefined"){
+				s2[member] = s[member];
+			} else{
+				s2[member] = s[member].toString().replace(/CS[A-Z0-9]{6}/,STID);
+			}
+		}
+	}
+
+	s2.pageName=s2.eVar1=STID;
+
+/******* ↑ここまでに送信したいパラメータを設定すること ********/
+	/* 送信 */
+	s2.t();
+}
+
+/****************************************
+* reqEventsDirect
+* 直売指定EVENT送信
+*****************************************/
+function reqEventsDirectPC(e, n) {
+	if(typeof(s_gi)!="function"){
+		console.log("DirectlinkTrackEvents="+e+",DirectName="+n);return;
+	}
+	/* 別変数に値渡し */
+	var s=s_gi(s_account);
+
+	s.events=e;
+	s.linkTrackEvents=e;
+	s.tl(this,'o',n);
+}
+
+/****************************************
+* reqVarDirect
+* 特定変数を出力
+*****************************************/
+function reqVarDirectPC(en,ev, ltv) {
+	if(typeof(s_gi)!="function"){
+		var log="";
+		if(en&&ev)log+=en+"="+ev;
+		console.log("reqVarDirectPC:"+log);return;
+	}
+
+	/* 初期化 */
+	s=s_gi(s_account);
+	s[en]=ev;
+
+	s.linkTrackVars=en;
+	s.tl(this,'o',ltv);
+}
+
+/****************************************
+* reqVosFedDirectPageName
+* 直売指定画面ID送信（PC）
+*****************************************/
+function reqVosFedDirectPageClickPC(custom) {
+	if(typeof(s_gi)!="function"){
+		console.log("directCustomlinkPC:"+custom);return;
+	}
+
+	/* 初期化 */
+	s=s_gi(s_account);
+
+/******* ↓ここから下に送信したいパラメータを設定すること ********/
+	 s.events='';
+	 s.linkTrackVars='events';
+	 s.linkTrackEvents='';
+
+/******* ↑ここまでに送信したいパラメータを設定すること ********/
+	/* 送信 */
+	s.tl(this,'o', custom);
+}

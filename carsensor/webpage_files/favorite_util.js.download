@@ -1,0 +1,280 @@
+/**
+ * Cs_FavUtil
+ *
+ * @created    2010/04/12
+ * @author		yoshimura
+ * @version	1.0
+ * @modified	2010/11/11	niitsuma	購入別一覧と物件別一覧の連動処理
+ *										1,どちらかの一覧でお気に入り登録をしたら、もう片方の一覧でその物件と関連する物件を登録済みする。
+ *										2,購入別一覧でお気に入り登録をした物件の他のプランに関しては文言が違うポップアップを出す。
+ * @modified	2015/02/24	mashiko		デザインリファクタリング
+ *
+ */
+var Cs_FavUtil =
+{
+	/**
+	 * お気に入り登録する。
+	 *
+	 * @param string  bkknCd	お気に入り登録する物件コード
+	 * @param string  routeId	ROUTEID
+	 * @param string  fairCd	Fairコード
+	 * @param string  orgId		「追加しました」メッセージ表示基点要素のID
+	 * @param string  btnId		お気に入りボタン要素のID
+	 * @param int     top 		「追加しました」メッセージ表示起点要素からのオフセット(top)
+	 * @param int     left 		「追加しました」メッセージ表示起点要素からのオフセット(left)
+	 * @param int     btnSize	お気に入りボタンサイズ種別(1:物件詳細下部 2:スライドショー 3:物件一覧、物件詳細上部、最近見た中古車）
+	 */
+
+	add : function(bkknCd, routeId, fairCd, btnId, favId)
+	{
+		var RET_STS_OK			= 0;	//処理結果ステータス：正常
+		var RET_STS_ERR_PRM		= 1;	//処理結果ステータス：パラメータチェックエラー
+		var RET_STS_ERR_BKN		= 2;	//処理結果ステータス：指定物件未存在
+		var RET_STS_ERR_MAX		= 3;	//処理結果ステータス：登録最大数オーバー
+		var RET_STS_ERR			= 4;	//処理結果ステータス：その他エラー
+
+		var retData		= null;
+		var favnum 		= 0;
+
+		// お気に入り登録
+		retData = this.reqAdd(bkknCd, routeId, fairCd, false);
+
+		//---------------------------------
+		//処理結果毎の処理
+		//---------------------------------
+		switch(retData.status){
+			//正常時
+			case RET_STS_OK:
+				break;
+
+			//登録最大数オーバー
+			case RET_STS_ERR_MAX:
+				if(confirm("「お気に入り」の登録最大数(30台)を超えました。\n\n登録日時の古いものを削除し、ご指定の中古車をお気に入りに登録します。\nよろしいですか？")){
+					// 自動押し出しで登録
+					retData = this.reqAdd(bkknCd, routeId, fairCd, true);
+					if(retData.status != RET_STS_OK) {
+						alert("お気に入り登録できませんでした。");
+						return false;
+					}
+				}else{
+					return false;
+				}
+				break;
+
+			//指定物件未存在
+			case RET_STS_ERR_BKN:
+					alert("選択した中古車は都合により削除しました。\n申し訳ございませんが、他の中古車をお選びください。");
+					return false;
+				break;
+
+			//その他エラー
+			default:
+					alert("お気に入り登録できませんでした。");
+					return false;
+				break;
+		}
+
+		// お気に入りボタン差し替え
+		if(favId == "non") return "non";	// ボタンなし。
+		Cs_FavUtil.swapBtn('#'+btnId, '#'+favId);
+
+		this.chgFavNum(retData.favnum);
+		return true;
+
+	},
+
+	/**
+	 * お気に入り登録のサーバ側処理をリクエストする。
+	 *
+	 * @param string  bkknCd	「追加しました」メッセージ表示基点要素のID
+	 * @param string  routeId	ROUTEID
+	 * @param string  fairCd	Fairコード
+	 * @param boolean adbkkn	自動押し出し有無（自動押し出しする場合はtrue)
+	 *
+	 * @return retData			ajaxリクエストが正常終了した場合は処理結果(json形式）
+	 *							リクエスト失敗時はstatus=4を返却
+	 */
+	reqAdd : function(bkknCd, routeId, fairCd, adbkkn)
+	{
+		var retData;
+
+		var params = {
+			'BKKN':    bkknCd,
+			'ROUTEID': routeId,
+			'FAIR':    fairCd,
+		};
+		if (adbkkn == true){
+			params['ADBKKN'] = 1;
+		};
+
+
+		//サーバ側処理リクエスト
+		$.ajax({
+			type		: 'GET',
+			url			: "/usedcar/addFavorite.php",
+			data		: params,
+			dataType	: 'json',
+			async		: false,
+			cache		: false,
+			success		: function(data){
+				retData = data;
+			},
+			error		: function() {
+				retData = {"status":4, "favnum":0};
+			}
+		});
+		return retData;
+	},
+
+	chgFavNum : function(favnum)
+	{
+		var strFavnum = favnum > 0 ? favnum : "未登録";
+		// for edge
+		if(favnum <= 0){
+			$("#favnum").text("");
+			$("#favnum-unit").text(strFavnum);
+
+		}else{
+			$("#favnum").text(strFavnum);
+			$("#favnum-unit").text("台");
+		}
+		$("#favnum-link").attr("title", "お気に入り：" + $("#favnum").text() + $("#favnum-unit").text());
+		// for edge scroll lock area
+		if($("#favnum2")) {
+			if(favnum <= 0){
+				$("#favnum2").text("");
+				$("#favnum-unit2").text(strFavnum);
+
+			}else{
+				$("#favnum2").text(strFavnum);
+				$("#favnum-unit2").text("台");
+			}
+			$("#favnum-link2").attr("title", "お気に入り：" + $("#favnum2").text() + $("#favnum-unit2").text());
+		}
+		// for global navi
+		if($("#favnum3")) {
+			if(favnum > 0) {
+				$("#favnum3").html("(<b class='num'>"+strFavnum+"</b>)");
+			}else{
+				$("#favnum3").html("");
+			}
+		}
+	},
+
+	del : function(bknCd, routeId)
+	{
+		var retData		= null;
+		retData = Cs_FavUtil.reqDel(bknCd, routeId);
+		// retData.status:status(0:ok, 1:param_err, 4:other_err(no cookie..))
+		// retData.favnum:favorite num
+		this.chgFavNum(retData.favnum);
+		return retData;
+	},
+
+	reqDel : function(bknCd, routeId)
+	{
+		var retData = {};
+		var url = "/usedcar/delFavorite.php?BKKN=" + bknCd +
+					(routeId ? "&ROUTEID=" + routeId : "");
+
+		$.ajax({
+			url		 : url,
+			dataType : 'json',
+			async	 : false,
+			cache	 : false,
+			complete : function(){},
+			success	 : function(data){
+				retData = data;
+			},
+			error	 : function(){
+				retData = {"status":4 , "favnum":0};
+			}
+		});
+		return retData;
+	},
+
+	delByStat : function(stat, routeId)
+	{
+		var retData		= null;
+		retData = Cs_FavUtil.reqDelByStat(stat, routeId);
+		// retData.status:status(0:ok, 1:param_err, 4:other_err(no cookie..))
+		// retData.favnum:favorite num
+		this.chgFavNum(retData.favnum);
+		return retData;
+	},
+
+	reqDelByStat : function(stat, routeId)
+	{
+		var retData = {};
+		var url = "/usedcar/delFavorite.php?STAT=" + stat +
+					(routeId ? "&ROUTEID=" + routeId : "");
+
+		$.ajax({
+			url		 : url,
+			dataType : 'json',
+			async	 : false,
+			cache	 : false,
+			complete : function(){},
+			success	 : function(data){
+				retData = data;
+			},
+			error	 : function(){
+				retData = {"status":4 , "favnum":0};
+			}
+		});
+		return retData;
+	},
+
+	getBukkenCdList : function(routeId, fair, addbkkn)
+	{
+		return this.reqGetBukkenCdList(routeId, fair, addbkkn);
+	},
+
+	/**
+	 * お気に入り登録済み物件コード取得のサーバー側処理をリクエストする。
+	 *
+	 * @param string  routeId	ROUTEID
+	 *
+	 * @return retData			ajaxリクエストが正常終了した場合は処理結果(json形式）
+	 *							リクエスト失敗時はstatus=4を返却
+	 */
+	reqGetBukkenCdList : function(routeId, fair, addbkkn)
+	{
+		var retData;
+
+		var params = {
+			ROUTEID: routeId,
+			FAIR:    fair,
+			ADDBKKN: addbkkn
+		};
+
+		//サーバ側処理リクエスト
+		$.ajax({
+			type		: 'GET',
+			url			: "/usedcar/getFavoriteBukkenCdList.php",
+			data		: params,
+			dataType	: 'json',
+			async		: false,
+			cache		: false,
+			success		: function(data){
+				retData = data;
+			},
+			error		: function() {
+				retData = {"status":4, "num":0, "list":[]};
+			}
+		});
+
+		return retData;
+	},
+
+	/**
+	 * お気に入りボタン差し替え(追加済)
+	 *
+	 * @param string  id			ID名
+	 * @param string  favId			追加済リンクID
+	 */
+	swapBtn : function(id, favId){
+		$(id).hide();
+		$(favId).show();
+	}
+}//Cs_FavUtil

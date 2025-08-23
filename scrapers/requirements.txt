@@ -1,0 +1,13 @@
+playwright==1.40.0
+beautifulsoup4==4.12.2
+psycopg2-binary==2.9.7
+asyncpg==0.29.0
+requests==2.31.0
+Pillow==10.1.0
+python-dotenv==1.0.0
+asyncio==3.4.3
+aiohttp==3.8.6
+lxml==4.9.3
+fake-useragent==1.4.0
+schedule==1.2.0
+loguru==0.7.2

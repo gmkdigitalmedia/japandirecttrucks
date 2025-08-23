@@ -1,0 +1,193 @@
+var cmn = {
+	// 画面表示判定
+	inViewAction : function(target, isOnlyOnce, callback){
+		var isView = false;
+		$(window).on('scroll', function(){
+			if(!target.length) return false;
+			if(isOnlyOnce  && isView) return false;
+			var tTop = target.offset().top,
+				tBottom = tTop + target.height(),
+				viewAreaHeight = $(window).scrollTop() + $(window).height(),
+				tLeft = target.offset().left,
+				tRight = tLeft + target.width(),
+				viewAreaWidth = $(window).scrollLeft() + $(window).width();
+
+			if((tTop > $(window).scrollTop() && tTop < viewAreaHeight) || (tBottom > $(window).scrollTop() && tBottom < viewAreaHeight)){
+				if((tLeft > $(window).scrollLeft() && tLeft < viewAreaWidth) || (tRight > $(window).scrollLeft() && tRight < viewAreaWidth)){
+					callback();
+					isView = true;
+				}
+			}
+		});
+	},
+	getMilSecTillEndMonth : function(){
+		var date = new Date();
+		var todayMilsec = date.getTime();
+		date.setMonth(date.getMonth() + 1);
+		date.setDate(0);
+		date.setHours(23, 59, 59);
+		var endMonthMilsec = Date.parse(date);
+		var expires = endMonthMilsec - todayMilsec;
+
+		return expires;
+	},
+	lazyImage : function(selector, noPhotoUrl){
+		var images = document.querySelectorAll('img['+selector+']');
+		var noPhoto = noPhotoUrl;
+		for(var i = 0; i < images.length; i++) {
+			var dataurl = images[i].getAttribute(selector);
+			var imgObj = images[i];
+
+			function imgChk(imgObj, dataurl, image){
+				var tgtimage = new Image();
+				tgtimage.onload = function(){
+					setTimeout( function() {
+						$(imgObj).hide()
+						setTimeout( function() {
+							$(imgObj).attr('src', dataurl);
+							setTimeout( function(){
+								$(imgObj).fadeIn();
+							},0);
+						},0);
+					} ,500);
+				}
+				tgtimage.onerror = function(){
+					setTimeout(function(){
+						$(imgObj).hide()
+						setTimeout( function() {
+							$(imgObj).attr('src', image);
+							setTimeout( function(){
+								$(imgObj).fadeIn();
+							},0);
+						},0);
+					} ,500);
+				}
+				tgtimage.src = dataurl;
+			}
+			imgChk(imgObj, dataurl, noPhoto);
+		}
+	}
+}
+
+$(function(){
+	/**
+	 * @name toggleUI
+	 * ex）
+	 *   呼び出し: $('[data-toggleUI]').smoothScroll(); ※引数省略可 {duration:300,box:<開く対象の要素>}
+	 *   ※クリック対象のリンク（is-activeを設定する箇所）にdataを設置
+	 */
+	$.fn.toggleUI = function(){
+		return this.each(function(){
+			$(this).on('click', function() {
+				var t=this,i=$(t).data("toggleui");
+				$(i.box).slideToggle(i.duration,function(){
+					$(t).toggleClass('is-active');
+					$(t).trigger('toggleUI_Callback');
+				});
+			});
+		});
+	}
+	/**
+	 * @name tabUI
+ 	 * ex）
+	 *   呼び出し: $('[data-tabui]').tabUI(); ※引数省略可
+	 *   {"tabContents":".js-tabSwitch(表示要素のクラス名)","tabTrigger":".js-tabTrigger(タブのクラス名)"}
+	 */
+	$.fn.tabUI = function(index){
+		return this.each(function(){
+			var $this = $(this);
+			var $p = $(this).parent();
+			var $trigger  = $p.find($(this).data('tabui').tabTrigger);
+			var $contents = $p.find($(this).data('tabui').tabContents);
+			var tabChange = function(index){
+				$contents.addClass('u-hidden');
+				$trigger.removeClass('is-active');
+				$contents.eq(index).removeClass('u-hidden');
+				$trigger.eq(index).addClass('is-active');
+			};
+
+			// event
+			$trigger.on('click', function(e) {
+				e.preventDefault();
+				var index = $(this).parent().index();
+				if($(this).hasClass('is-active')) {
+					return;
+				}
+				tabChange(index);
+				$this.trigger('tabUI_Callback', [index]);
+			});
+
+			// init
+			if(index)tabChange(index);
+		});
+	}
+	/**
+	 * @name smoothScroll
+	 * @param {number} [duration=300] - スクロール速度ミリ秒
+	 * @param {number} [margin=0] - スクロール先の余白調整
+	 *	ex）
+	 *   呼び出し: $('[data-role="smoothScroll"]').smoothScroll(); ※引数省略可 {duration:300,margin:0}
+	 */
+	$.fn.smoothScroll = function(option) {
+		option = $.extend({}, $.fn.smoothScroll.option, option);
+		return this.each(function() {
+			var $this = $(this),
+				$body = $('html, body'),
+				href = $this.attr('href'),
+				target;
+
+			$this.on('click', function(e) {
+				e.preventDefault();
+				var endflg = false;
+				var _element = this;
+				$this.trigger('scrollBefore', [_element, option]);
+				// 行き先を設定
+				target = $(href).size() && $(href) ? $(href).offset().top - option.margin : 0;
+				// スクロール
+				$body.animate({scrollTop: target}, option.duration, function(){
+					if (!endflg) {
+						endflg = true;
+						$this.trigger('scrollAfter', [_element]);
+					}
+				});
+			});
+		});
+	}
+	$.fn.smoothScroll.option = {
+		duration: 300,
+		margin: 0
+	};
+
+	/*
+	 * ポップアップ表示
+	 *	ex）
+	 *   設定方法: <a data-popup='{"url":"表示URL","name":"window名","width":"999","height":"999"}'>
+	 *   呼び出し: $("[data-popup]").popupWindow();
+	 */
+	$.fn.popupWindow = function(){
+		return this.each(function() {
+			$(this).on('click', function() {
+				var i = $(this).data("popup");
+				var opt = "scrollbars=yes,location=no,menubar=no,resizable=no";
+				opt += ",width="+i.width+",height="+i.height;
+				win = window.open(i.url,i.name,opt);
+			});
+		});
+	}
+
+	/*
+	 * カラーボックス
+	 *	ex）
+	 *   設定方法: <a data-modalWindow='{"iframe":true,"width":"999","height":"999"}'>
+	 *   呼び出し: $("[data-modalWindow]").modalWindow();
+	 *   ※"/static/cmn/js/lib/jquery/jquery.colorbox-min.js" "/static/cmn/css/lib/jquery/colorbox.css"を呼び込む必要あり
+	 */
+	$.fn.modalWindow = function(){
+		return this.each(function() {
+			var i = $(this).data('modalwindow');
+			i["opacity"] = "0.75";
+			i["fixed"] = true;
+			$(this).colorbox(i);
+		});
+	}
+});

@@ -1,0 +1,49 @@
+// common header mylist count
+// use jquery & cs_util.js
+$(function(){
+
+	var csuuid = Cs_Util.getCookie("CSUUID");
+	if(csuuid == null){ return; }
+
+	var strFavnum = "未登録";
+	var favnum = Cs_Util.getCookie("CSFAVNUM_" + csuuid);
+	if((""+favnum).match(/^[0-9]+$/)){
+		if(favnum > 0){
+			strFavnum = favnum;
+		}
+	}
+	// edge用
+	if($("#favnum").size() > 0) {
+
+		if(favnum <= 0){
+			$("#favnum").text("");
+			$("#favnum-unit").text(strFavnum);
+
+		}else{
+			$("#favnum").text(strFavnum);
+			$("#favnum-unit").text("台");
+		}
+		$("#favnum-link").attr("title", "お気に入り：" + $("#favnum").text() + $("#favnum-unit").text());
+	}
+	// edgeスクロールロック用
+	if($("#favnum2").size() > 0) {
+		if(favnum <= 0){
+			$("#favnum2").text("");
+			$("#favnum-unit2").text(strFavnum);
+
+		}else{
+			$("#favnum2").text(strFavnum);
+			$("#favnum-unit2").text("台");
+		}
+		$("#favnum-link2").attr("title", "お気に入り：" + $("#favnum2").text() + $("#favnum-unit2").text());
+	}
+	// グロナビ用(お気に入り)
+	if($("#favnum3").size() > 0) {
+		if((""+favnum).match(/^[0-9]+$/) && favnum>0){
+			$("#favnum3").html("(<b class='num'>"+favnum+"</b>)");
+		}
+	}
+});
+
+
+

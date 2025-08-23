@@ -1,0 +1,114 @@
+services:
+  # Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: gps-trucks-db
+    environment:
+      POSTGRES_DB: gps_trucks_japan
+      POSTGRES_USER: gp
+      POSTGRES_PASSWORD: Megumi12
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - gps-network
+
+  # Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: gps-trucks-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - gps-network
+
+  # Backend API
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gps-trucks-backend
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgres://gp:Megumi12@postgres:5432/gps_trucks_japan
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gps_trucks_japan
+      DB_USER: gp
+      DB_PASSWORD: Megumi12
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: gps-trucks-japan-super-secret-jwt-key-2024
+      PORT: 3002
+    ports:
+      - "3002:3002"
+    volumes:
+      # - ./backend:/app
+      # - /app/node_modules
+      - ./images:/app/public/images
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - gps-network
+    command: node simple-server.js
+
+  # Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gps-trucks-frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3002
+      NODE_ENV: development
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - gps-network
+    command: npm run dev
+
+  # Admin Panel
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: gps-trucks-admin
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3002
+      NODE_ENV: development
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./admin:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - gps-network
+    command: npm run dev
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  gps-network:
+    driver: bridge

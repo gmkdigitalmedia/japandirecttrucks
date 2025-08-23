@@ -1,0 +1,1035 @@
+// クロスブラウザ対策
+if(!Array.prototype.forEach){
+	Array.prototype.forEach=function(c,a){
+		if(this==null)throw new TypeError();
+		var k=0,O=Object(this),l=O.length||0;
+		if({}.toString.call(c)!="[object Function]")throw new TypeError();
+		while(k<l){(k in O)&&c.call(a,O[k],k,O),k++}
+	};
+}
+if(!Array.prototype.some) {
+	Array.prototype.some=function(f){
+		if(this==null)throw new TypeError();
+		var t=Object(this),l=t.length||0,p=arguments[1],i=0;
+		if((typeof f)!="function")throw new TypeError();
+		for(;i<l;i++){if((i in t)&&f.call(p,t[i],i,t))return !0;}
+		return !1;
+	};
+}
+if(!Array.prototype.every){
+	Array.prototype.every=function(f){
+		if(this==null)throw new TypeError();
+		var t=Object(this),l=t.length||0,p=arguments[1],i=0;
+		if((typeof f)!="function")throw new TypeError();
+		for(;i<l;i++){if((i in t)&&(!f.call(p,t[i],i,t)))return !1;}
+		return !0;
+	};
+}
+$(function(){//toggleClassの代用
+	$.fn.extend({toggleC:function(cs,i){
+		var j={};i=i||0;
+		cs.forEach(function(c){this.removeClass(c)},this),
+		cs[i]&&this.addClass(cs[i])
+	}})
+});
+$(function(){	// スライダー初期化
+	priceGraphChange(pGraph);
+	$("#jsiTargetSelectPrice1 .bar").show();
+	// ptext = ptext.join(',').replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'').split(',');{* 実害無いので既存classそのまま放置 *}
+	$("#jsiPriceSlider").csSlidebar({
+		dispAreaIds : {lower:'jsiPriceLower', upper:'jsiPriceUpper'},
+		dispTextList: ptext,
+		updValIds   : {lower:'PMIN', upper:'PMAX'},
+		updValList  : plist,
+		initSelect  : {lower:searchIndex(pmin, plist, 0),upper:searchIndex(pmax, plist, plist.length - 1)},
+		callback    : {
+			func : function(){$("#PMIN").trigger('change')}
+		}
+	});
+	function setValue(v, ary){
+		var len = ary.length;
+		for(var i = 0; i < len; i++){
+			if(parseInt(ary[i]) > parseInt(v)) return i;
+		}
+		return false;
+	}
+	function searchIndex(value, list, def){
+		return ($.inArray(value, list) != -1) ? $.inArray(value, list) : setValue( value, list ) || def;
+	}
+});
+
+var spbl={};
+$(function(){
+
+	var compcar={
+		defPrmNm : 'BT', 
+		defPrmVal : 'XX', 
+		chgPrmNm : 'SP',
+		chgPrmVal : 'P', 
+		defParams:function(){
+			return compcar.defPrmNm + '=' + compcar.defPrmVal;
+		}, 
+		chgParams:function(){
+			return compcar.chgPrmNm + '=' + compcar.chgPrmVal;
+		}
+	}
+
+	// 検索機能の制御
+	spbl.base={
+		src:{},
+		values:{},
+		timer:"",
+		srhHist:{
+			totalCnt:{},
+			colorPanel:{},
+			priceSlider:{},
+		},
+		init:function(src,l){
+			var t=this;
+			$('body').append('<div id="haba" style="font-size: 12px;display:none;position:absolute"></div>');
+			t.importSrc(src).importVal().update().setLabels();
+			$.each(spbl.tb,function(){this.init(t,l)});
+			$("#panelForm").submit(function(){
+				t.update(),t.values.STID='CS210610';
+				(t.values.SHOP=='000000000')&&['SHOP','SHOPBN','SHOPCMB'].forEach(function(k){t.values[k]=''});
+
+				var non_kw_params=t.getQstr(['STID','KW']),qstrs=t.getQstrValues();
+				if (!non_kw_params && qstrs.KW != "") {
+					return (location.href='/usedcar/freeword/'+encodeURIComponent(qstrs.KW)+'/index.html'),!1;
+				}
+
+				return (location.href='/usedcar/search.php?'+t.getQstr()),!1;
+			});
+			$('#rest').click(function(){
+				return (confirm("すべての条件指定をクリアします。\nよろしいですか？")&&t.clear()),!1
+			});
+			$(':checkbox[name=CL]').click(function(){
+				return tbAbs._lim($(':checkbox[name=CL]:checked').length-1,10,'本体色');
+			});
+			t.each(function(){$(this).change(function(){t.setVal()})});
+		},importSrc:function(s){
+			var t=this;
+			$.each({shashu:'brandShashuNames',grade:'fmcGradeNames',area:'areaNames',city:'cityNames'},function(i,n){
+				if(!s[n])return !0;
+				t.src[i]={};
+				$.each(s[n],function(k,o){t.src[i][k]=o.name});
+			});
+			$.extend(t.src,t.codexR());
+			return t;
+		},importVal:function(){
+			return $('#H_Frm').val()&&($.each(spbl.tb,function(){this.esc=!0}),this.values=this.empty().biblioR(),this.dump()),this;
+		},retrieve:function(){
+			var n,v,r={},t=this;
+			this.each(function(){
+				if($(this).is(':checkbox:not(:checked)'))return !0;
+				n=$(this).attr('name'),v=$(this).val()
+				if(!n)return !0;
+				r[n]?r[n].push(v):r[n]=(t.useSplit(n)?(v?v.split("*"):[]):v);
+			});
+			return r;
+		},each:function(f){
+			$('#panelForm :input[name]').not('.js_uncollectible *').each(f);
+			return this;
+		},useSplit:function(n){
+			return $.inArray(n,['BRDC','CARC','FMCC','MCC','GRDC','GRDKC','AR','CITY','CL','SP','SLST','OPTCD','LOAN'])>-1
+		},clear:function(){
+			$('#H_Frm').val('');
+			$('#SORT').val('');
+			$('#CSTM').val('');
+			$("#jsiPriceSlider").data('csSlidebar').trigger("reset");
+			$('a.js_resetbtnSmall').trigger('click');
+			this.makePanelScrollUp(); // 検索パネルスクロール
+			reqEventPC("event284");
+			return this.empty().update().setLabels().buttonFlush();
+		},empty:function(){
+			return this.each(function(){$(this).is('.js_untouchable')||($(this).is(':checkbox')?(this.checked=!1):$(this).val(''))}),this;
+		},dump:function(){
+			var t=this;
+			t.empty().each(function(){
+				var n=this.name,j=$(this),v=t.values[n];
+				(v != undefined)&&(j.is(':checkbox')?(t.useSplit(n)?v:[v]).forEach(function(w){
+					(j.val()==w)&&(j[0].checked=!0)
+				}):j.val(t.useSplit(n)?v.join("*"):v));
+			});
+			return t;
+		},update:function(){
+			return this.values=this.retrieve(),this;
+		},setLabels:function(){
+			var str,names,t=this,f=function(v){names.push(v)};
+			[
+				[["BRDC","CARC"],"shashu","#selectedCar","shashuAnc"],
+				[["FMCC","GRDKC"],"grade","#selectedGrd","grdAnc"],
+				[["AR"],"area","#selectedArea","areaAnc",1],
+				[["CITY"],"city","#selectedCity","cityAnc"]
+			].forEach(function(r){
+				names=[];
+				r[0].forEach(function(k){t.getNames(k,r[1],r[4]).forEach(f)});
+				str=names.join('、');
+				$(r[2]).attr("title", str).text(t.truncate(str));
+				t.updateButton(r[3],r[2],names.length);
+			});
+			[
+				["FUEL","fuelBox","chkFuel_"],
+				["BT","bodytypeBox","BT_"],
+				["KUDO","kudoBox","KUDO_"],
+			].forEach(function(r){
+				var v = t.values[r[0]];
+				var i=[];
+				if (v!="") i=$('#'+r[2]+t.values[r[0]], '#'+r[1]);
+				(i.length==1)?i.click():$('a.js_resetbtnSmall', $('#'+r[1])).click();
+			});
+			return t.codexW();
+		},getNames:function(vkey,skey,z){
+			var names=[];
+			if(this.values[vkey]){
+				var m=this.src[skey];
+				m&&this.values[vkey].forEach(function(v){m[v]?names.push(m[v]):(z&&(v=="0")&&names.push('全国'))});
+			}
+			return names
+		},biblioW:function(){
+			var t=this,val={};
+			$.each(t.values,function(k,v){v.length&&(val[k]=v)});
+			$('#H_Frm').val(t.o2s(val));
+			return t;
+		},codexW:function(){
+			$('#H_Dic').val(this.o2s(this.src));
+			return this;
+		},o2s:function(obj,str){
+			str=str||"";
+			var s="",i=0,k,f=!1;
+			if(typeof obj == 'object'){
+				if(obj instanceof Array){
+					s+="[";
+					for(;i<obj.length;i++){s+=(i?",":"")+this.o2s(obj[i])}
+					s+="]";
+				}else{
+					s+="{";
+					for(k in obj){s+=(f?",":"")+'"'+k+'"'+":"+this.o2s(obj[k]),f=!0}
+					s+="}";
+				}
+			}else{
+				if(typeof(obj)=="string") return '"'+obj+'"';
+				return obj;
+			}
+			return str+s;
+		},biblioR:function(){
+			return this.peruse('#H_Frm');
+		},codexR:function(){
+			return this.peruse('#H_Dic');
+		},peruse:function(s){
+			return eval('('+($(s).val()||"{}")+')');
+		},receive:function(val,dic,key){// thickboxがセットした値を受け取る
+			var t=this,vs=t.values;
+			$.each(val,function(k,v){vs[k]=v.slice(0)});
+// 指定中の車種に属するモデル・グレードに制限
+			['FMCC','GRDKC'].forEach(function(k){tbAbs.splice(vs[k],vs.CARC,!0)});
+// 指定中の県に属する都市に制限
+			((vs.AR.length!=1)||(vs.AR[0]!=spbl.tb.city.getAR()))&&(vs.CITY=[]);
+			this.src[key]=dic;
+			this.dump().setLabels();
+		},truncate:function(s){
+			var i=s.length,s2=s;
+			for(;i>0;i--){
+				$('#haba').text(s2);
+				if($('#haba').innerWidth()<220)break;
+				s2=s2.slice(0,-1);
+			}
+			return s==s2?s:s2+"..."
+		},updateButton:function(btnId,aId,on){
+			if(on){$('#'+btnId).hide();$(aId).show();} else{$('#'+btnId).show();$(aId).hide();}
+		},setVal:function(){
+			this.update().biblioW().buttonFlush();
+		},buttonFlush:function(){
+			var t=this,q=t.getQstr(),
+				q_cl=t.getQstr(['CL']),
+				q_ps=t.getQstr(['PMIN','PMAX']),
+				rqst="multiparam",
+				totalCntHist=t.srhHist.totalCnt[q],
+				colorPanelHist=t.srhHist.colorPanel[q_cl],
+				pricecSliderHist=t.srhHist.priceSlider[q_ps];
+
+			if(totalCntHist) t.realTimeCounter(totalCntHist);
+			if(colorPanelHist) t.sortColorPanel(colorPanelHist, ".js-colorPanelBlock");
+			if(pricecSliderHist) t.graphChange(pricecSliderHist);
+
+			if(totalCntHist && colorPanelHist && pricecSliderHist){
+				if(totalCntHist == "0") reqEventPC("event285");
+				return;
+			} else if(totalCntHist || colorPanelHist || pricecSliderHist){
+				rqst += "&CONDMTHD=";
+				rqst += "_" + (totalCntHist == null?"count":"");
+				rqst += "_" + (colorPanelHist == null?"color":"");
+				rqst += "_" + (pricecSliderHist == null?"pcount":"");
+			}
+
+			$.ajax({
+				url:'/usedcar/modules/thickbox.php?RQST='+rqst+'&'+q,
+				dataType:'json',
+				async: false,
+				success:function(j){
+					if(j['totalCnt']){
+						t.realTimeCounter(j['totalCnt']);
+						t.srhHist.totalCnt[q] = j['totalCnt'];
+						if(j['totalCnt'] == "0") reqEventPC("event285");
+					}
+					if(j['colorPanel']){
+						t.sortColorPanel(j["colorPanel"], ".js-colorPanelBlock");
+						t.srhHist.colorPanel[q_cl] = j["colorPanel"];
+					}
+					if(j['pcount']){
+						t.graphChange(j["pcount"]);
+						t.srhHist.priceSlider[q_ps] = j["pcount"];
+					}
+				}
+			});
+		},realTimeCounter:function(bknCount){
+			var t = this;
+			var speed = 10;
+			var oldCnt = parseInt($("#sbmt > span").text().replace(/,/g,""));
+			var addCnt = oldCnt;
+			var nowCnt = parseInt(bknCount.replace(/,/g,""));
+
+			$("#sbmt > span").text(t.getNumFormat(nowCnt));
+
+			if(t.timer != ""){
+				clearInterval(t.timer);
+			}
+			if( oldCnt < nowCnt){
+				t.timer = setInterval(function(){
+					if(addCnt <= nowCnt){
+						$("#sbmt > span").text(t.getNumFormat(addCnt));
+						addCnt = parseInt(addCnt) + 5555;
+					}else{
+						$("#sbmt > span").text(t.getNumFormat(nowCnt));
+						clearInterval(t.timer);
+					}
+				},speed);
+			}else{
+				t.timer = setInterval(function(){
+					if(nowCnt <= addCnt){
+						$("#sbmt > span").text(t.getNumFormat(addCnt));
+						addCnt = parseInt(addCnt) - 5555;
+					}else{
+						$("#sbmt > span").text(t.getNumFormat(nowCnt));
+						clearInterval(t.timer);
+					}
+				},speed);
+			}
+
+			if(bknCount == 0){
+				$("#sbmt").prop("disabled", true);
+			}else{
+				$("#sbmt").prop("disabled", false);
+			}
+		},sortColorPanel:function(colorPanel, panelBlock){
+			var newList = [];
+			$.each(colorPanel, function(colorCd, colorVal){
+				var clrId = '#' + colorVal.id;
+				if(colorVal.cnt === 0){
+					$(clrId).prop("disabled", true);
+				}else{
+					$(clrId).prop("disabled", false);
+				}
+				newList.push($(clrId).parent());
+			});
+			$(panelBlock).append(newList);
+		},
+		getNumFormat:function(num){
+			num = new String(num).replace(/,/g, "");
+			while(num != (num = num.replace(/^(-?\d+)(\d{3})/, "$1,$2")));
+			return num;
+		},getQstr:function(i){
+			var a=[],t=this,i=i||[];
+			var qstrValues = t.getQstrValues();
+			$.each(qstrValues, function(k,v){
+				if((!tbAbs._in(k,i))&&(v.length)){
+					a.push(k+'='+encodeURIComponent(t.useSplit(k)?v.join('*'):v));
+				}
+			});
+			// compact car s
+			var comPosi = $.inArray(compcar.defParams(),a)
+			if(comPosi>-1){
+				a.splice(comPosi, 1);
+				var spReg = new RegExp(compcar.chgPrmNm + "=[A-Z\*]*");
+				var spStr = a.join().match(spReg);
+				if(spStr){
+					a[$.inArray(spStr[0],a)] += "*" + compcar.chgPrmVal;
+				}else{
+					a.push(compcar.chgParams());
+				}
+			}
+			// compact car e
+			return a.join('&');
+		},getQstrValues:function(){
+			var v=$.extend({},this.values);
+			[['MCC','FMCC'],['GRDC','MCC']].forEach(function(k){tbAbs.splice(v[k[0]],v[k[1]])});
+			(v['SHOP']=='000000000') && ['SHOP','SHOPBN','SHOPCMB'].forEach(function(k){ v[k] = '' });
+
+			return v;
+		},
+		graphChange:function(p){
+			priceGraphChange(p);
+		},
+		makePanelScrollUp:function(){
+			$("#campingCarsPanel, #vanPanel, #welfareVehiclePanel").hide();
+			if($(".btnTrigger").hasClass('is-active')){
+				var position = $(".title1").offset();
+				$("html,body").animate({scrollTop:position.top}, 500);
+			}
+		},
+	};
+	spbl.miniModal={
+		init:function(){
+			[{btnId:'fuelSelect',boxId:'fuelBox',    vId:'FUEL',linkId:'selectedFuel'},
+			 {btnId:'bodySelect',boxId:'bodytypeBox',vId:'BT',  linkId:'selectedBody'},
+			 {btnId:'kudoSelect',boxId:'kudoBox',    vId:'KUDO',linkId:'selectedKudo'}
+			].forEach(this.initMiniModal);
+		},
+		initMiniModal:function(ids){
+			var box=$('#'+ids.boxId),
+			toggle=function(){
+				var flg=box.is(':hidden');
+				$('[data-minimodal=target]').removeClass('is-active');
+				flg&&box.addClass('is-active');
+			},hide=function(){
+				box.removeClass('is-active');
+				updateButton(ids.btnId,ids.linkId,($('#'+ids.vId).val()!=""));
+			},set=function(v,t){
+				var s=($('#'+ids.vId).val()!=v);
+				$('#'+ids.vId).val(v);
+				s&&spbl.base.setVal();
+				$('#'+ids.linkId).text(t),hide();
+			},onR=function(r){
+				set(r.value,$('label[for='+r.id+']').text());
+			},updateButton=function(btnId,linkId,on){
+				if(on){
+					$('#'+btnId).hide(),$('#'+linkId).show();
+				} else{
+					$('#'+btnId).show(),$('#'+linkId).hide();
+				}
+			};
+			$('#'+ids.btnId+','+'#'+ids.linkId).click(function(){return toggle(),!1});
+			$('button.js_close',box).click(function(){return hide(),!1});
+			$('a.js_resetbtnSmall',box).click(function(){return $(':radio',box).removeAttr('checked'),set('',''),!1});
+			$(':radio',box).click(function(){onR(this)});
+			$('#H_Frm').val()||$(':radio',box).each(function(){this.checked&&onR(this)});
+		}
+	};
+	spbl.miniModal.init();
+	spbl.tb={};
+// ThickBox制御の親
+	tbAbs={
+		name:"",
+		vmax:10,
+		base:{},
+		valueKeys:[],
+		vlen:{2:'BRDC',7:'CARC',12:'FMCC',17:'GRDKC'},
+		values:[],
+		dictionary:{},
+		last_q:'',
+		last_c:'',
+		reqKey:'',
+		actDataType:'json',
+		srcKey:'',
+		lq:'',
+		stp:!1,
+		que:[],
+		esc:!1,
+		init:function(b,l){
+			this.base=b,this.lq=l;
+			this.last_q=this.base.getQstr(this.valueKeys);
+			this.onInit();
+		},onInit:function(){
+		},ajax:function(o,j){
+			var t=this;
+			if(t.stp)return;
+			$.ajax($.extend({
+				beforeSend:function(){j&&j.hide(),t.stp=!0;},
+				error:function(){
+					$('[data-modal='+t.srcKey+'] div.js_modal__inner').hide().after(t.errHtml()),
+					t.esc=!0;
+				},
+				complete:function(){j&&j.show(),t.stp=!1,t.que.length&&(t.que.shift())()}
+			},o));
+		},activate:function(){
+			this.base.update();
+			var t=this,q=t.base.getQstr(t.valueKeys);t.values=[];
+			t.valueKeys.forEach(function(n){t.values=t.values.concat(t.base.values[n]||[])});
+			t.dictionary=$.extend({},t.base.src[t.srcKey]||{});
+			((t.esc||q!=t.last_q)&&t.reqKey)?t.ajax({
+				url:t.getUrl(t.reqKey,q),
+				dataType:t.actDataType,
+				success:function(j){
+					t.onActivateSuccess(j)
+					t.last_q=q;
+				}
+			},$('[data-modal='+t.srcKey+'] div.js_modelBody')):t.dump();
+			t.esc&&t.comeBack();
+		},comeBack:function(){
+			var t=this;
+			t.esc=!1,$('[data-modal='+t.srcKey+'] div.js_errorDisp').remove(),$('[data-modal='+t.srcKey+'] div.js_modal__inner').show();
+		},onActivateSuccess:function(j){
+		},getUrl:function(r,q){
+			var lh='/usedcar/modules/thickbox.php?';
+			this.lq&&(lh+='L_Q='+this.lq+'&')
+			return lh+'RQST='+r+'&'+q;
+		},_in:function(n,h){
+			return $.inArray(n,h)>-1;
+		},splice:function(s,h,d){
+			var a=s.slice(0),hl=(h[0]||'').length;
+			d=(arguments.length<3)||d,s.length=0;
+			a.forEach(function(v){(!d^tbAbs._in(v.slice(0,hl),h))&&s.push(v)});
+		},_add:function(v,d){
+			var t=this;
+			if(t._in(v,t.values))return !1;
+			if(!t._lim(t.values.length,t.vmax,t.name))return !1;
+			t.values.push(v);
+			t.dictionary[v]=d;
+			return !0;
+		},_lim:function(n,l,m){
+			if(l&&(n>=l)){
+				alert("指定できる"+m+"は"+l+"までです。");
+				return !1;
+			}
+			return !0;
+		},_del:function(v){
+			if(!this._in(v,this.values))return !1;
+			this.splice(this.values,[v],!1);
+			return !0;
+		},extractName:function(j){// 「トヨタ(16)」から「トヨタ」を抜き出す
+			return this._extract(j,'$1');
+		},extractNum:function(j){
+			return this._extract(j,'$2')-0;
+		},_extract:function(j,o){
+			return /^(.+)\((\d+)\)$/.test(j.text())?RegExp[o]:'';
+		},dump:function(){
+		},_dumpDeleteList:function(u,f,c,h){
+			var t=this,ul=$(u).empty();
+			t.values.forEach(function(v){
+				ul.html(ul.html()+t._getLiHtml(t.dictionary[v],v,h&&h[v.length]));
+			});
+			if(t.values.length>0){
+				ul.html(ul.html()+t._getCrHtml());
+			}
+			ul.find('button').click(f);
+			$(c).text(t.values.length);
+			panelModal.resize();
+			return t;
+		},clear:function(){
+			this.values=[],this.dump();
+			return !1;
+		},set:function(){
+			this.base.receive(this._retrieve(),$.extend({},this.dictionary),this.srcKey);
+			panelModal.close();
+//			tb_remove();
+			$('#panelForm').submit();
+//			this.base.setVal();
+			return !1;
+		},_retrieve:function(){
+			var t=this,v={};
+			if(t.valueKeys.length==1){
+				v[t.valueKeys[0]]=t.values.slice(0);
+			}else{
+				t.valueKeys.forEach(function(k){
+					v[k]=[],
+					t.values.forEach(function(val){(t.vlen[val.length]==k)&&v[k].push(val)});
+				});
+			}
+			return v;
+		},inhibit:function(){
+// ★★エラー表示デザインを
+		},errHtml:function(){
+			return ''
+				+ '<div class="modalError js_errorDisp" style="display:block">'
+				+ '  <p class="modalError__title">ただいまたいへん混みあっております。</p>'
+				+ '  <p class="modalError__text">申し訳ございませんが、しばらくしてから再度アクセスしてみてください。</p>'
+				+ '</div>';
+		}
+	};
+// メーカー・車種 ThickBox制御
+	spbl.tb.shashu=$.extend({},tbAbs,{
+		name:'メーカー、車名',
+		valueKeys:['BRDC','CARC'],
+		reqKey:'brand',
+		srcKey:'shashu',
+		onInit:function(){
+			this.initShashuChk();
+		},onActivateSuccess:function(j){
+			var n,t=this;
+			$('a.js_makerMenu').each(function(){
+				n=t.extractName($(this)),
+				n&&$(this).html(n+'<span>('+(j[n]||0)+')</span>')
+			});
+			$('#nList1,#nList2').hide();
+			t.values.length?$('#nList1').show():t.que.push(function(){t._clickBrand('',$('#allCar'))});
+			t.dump();
+		},clickBrand:function(brdc,a){
+			if(this.stp)return;
+			if($(a).is('.is-selected'))return;
+			this._clickBrand(brdc,$(a));
+		},_clickBrand:function(brdc,jq){
+			var brdn,t=this;
+			$('a.is-selected', jq.closest('dl')).removeClass("is-selected");
+			jq.addClass("is-selected");
+			brdn=t.extractName(jq);
+			$('#nList1:visible').hide();
+			t.ajax({
+				url:t.getUrl('shashu',t.last_q+'&BRDC='+brdc),
+				success:function(j){
+					var s=$('#nameListTitle');
+					brdc?s.hide():s.show(); // 「台数上位250車名」の表示
+					$('#allBrd dd[class!=js_makerAll]').remove();// SEO用のリンクを削除する
+					t.updateShashuList(brdc,brdn,j).updateMakerAllLink();
+					$('#nameListWrapper').scrollTop(0);
+				}
+			},$('#nList2'));
+		},updateMakerAllLink:function(){
+// ★★メーカーすべてを選んだ時の車種の"disabled"
+			var h=$('#nameList :hidden[name=makerAll_link]').val();
+			h&&$('#mnm > a').attr('href',h);
+		},updateShashuList:function(c,n,j){
+			$('#makerAll').val(c).removeAttr('checked').unbind('click');
+			c?$('#allBrd').show():$('#allBrd').hide(),
+			$('#mnm > a').text(n+'全て'),$('#nameList').empty().append(j),
+			$('#nList1').hide(),$('#nList2').show();
+			return this.initShashuChk();
+		},initShashuChk:function(){
+			var t=this;
+			$('#makerAll').click(function(){
+				return t.clickShashuAll(this);
+			});
+			$('input:checkbox[name=carcchk].js_CB1').click(function(){
+				return t.clickShashu(this);
+			});
+			return t.dump();
+		},dump:function(){
+			var t=this,chk=$('input:checkbox[name=carcchk]');
+			chk.removeAttr('disabled').removeAttr('checked');
+			t._in($('#makerAll').val(),t.values)&&$('#makerAll').prop('checked',true);
+			return t.chk(chk.not('#makerAll')).dumpCompareList().dumpDeleteList();
+		},clickShashuAll:function(cb){
+			var t=this,v=cb.value;
+			if(t.stp)return !1;
+//★			t._current(cb);
+			cb.checked&&t.splice(t.values,[v],!1);
+			if(!(cb.checked?t._add(v,$('#mnm').text().replace(/全て$/,'')):t._del(v)))return !1;
+			t.dump();
+			return !0;
+		},clickShashu:function(cb){
+			var t=this,nm;
+			if(t.stp)return !1;
+//★			t._current(cb);
+			nm=t.extractName($("label[for="+cb.id+"]"));
+			if(!(cb.checked?t._add(cb.value,nm):t._del(cb.value)))return !1;
+			return t.updateCompareList(cb).dump(),!0;
+		},clickCompare:function(cb){
+			var t=this,nm=$("#compareList label[for="+cb.id+"]").text();
+			if(!(cb.checked?this._add(cb.value,nm):this._del(cb.value)))return !1;
+			this.dump();
+			return !0;
+		},_current:function(cb){
+//★			$('input:checkbox[name=carcchk]').closest('span').closest('label').removeClass('is-selected'),
+//★			$(cb).closest('span').closest('label').addClass('is-selected');
+		},updateCompareList:function(cb){
+			var t=this,carc=cb.value;
+			if((t.last_c==carc)||!cb.checked)return t;
+			t.ajax({
+				url:t.getUrl('compare',t.last_q+'&CARC='+carc),
+				dataType:'json',
+				success:function(j){
+					$('#snm').html('「'+t.dictionary[carc]+'」とよく比較される車');
+					$('#compareList').empty();
+					j.thickbox.forEach(function(v,i){
+						var cb=$('<input type="checkbox" name="compchk" value="'+v.brandCd+'_'+v.shashuCd+'" id="chk2'+i+'">'),
+						a=$('<label for="chk2'+i+'" class="label--checkbox"><a href="#">'+v.shashuName+'</a></label>');
+						$('#compareList').append('<dd>'+cb[0].outerHTML+a[0].outerHTML+'</dd>');
+					});
+					$('#compareList a').click(function(){
+						var p={CARC:$('input:checkbox',$(this).closest('dd')).val()};
+						$.extend(p,j.linkParam);
+						return paneljump(p),!1;
+					});
+					$('#compareList input:checkbox').click(function(){
+						return t.clickCompare(this);
+					});
+					t.dumpCompareList();
+					t.last_c=carc;
+				}
+			},$('#compareList').closest('dl'));
+			return t;
+		},chk:function(clist){
+			clist.removeAttr('disabled').removeAttr('checked');
+			this.values.forEach(function(v){
+				var prp=(v.length==2)?'disabled':'checked',lft=(v.length==2)?'[value^=':'[value=';
+// ★★チェックボックスをdisabledにしたときのデザインを確認
+				clist.filter(lft+v+']').prop(prp,true);
+			});
+			return this;
+		},dumpCompareList:function(){
+			return this.chk($('#compareList :checkbox'));
+		},dumpDeleteList:function(){
+			var t=this;
+			return t._dumpDeleteList("#selectedCars",function(){
+				var v=this.id.slice(14),bx=$('input:checkbox[name=carcchk][value='+v+']');
+				bx.length&&bx.removeAttr('checked');
+				t._del(v),t.dump(),t.dumpDeleteList();
+				return !1;
+			},'#selectedShashuCount',{2:'選択メーカーから削除',7:'選択車種から削除'});
+		},_getLiHtml:function(n,c,t){
+			return '<button class="btnFunc--deleteSmall" id="tb_del_shashu_'+c+'" title="'+t+'">'+n+'</button>'
+		},_getCrHtml:function(){
+			return '<button class="selectItem__clear" onClick="spbl.tb.shashu.clear();return false;">条件をクリア</button>'
+		}
+	});
+// モデル・グレード ThickBox制御
+	spbl.tb.grade=$.extend({},tbAbs,{
+		name:"モデル、グレード",
+		valueKeys:['FMCC','GRDKC'],
+		reqKey:'grade',
+		actDataType:'html',
+		srcKey:'grade',
+		refresh:function(){// htmlにJSの効果を与える
+			var t=this;
+			t.aim("a[id^=switch_]").click(function(){
+				var t=this,ga=$("#gradeArea_"+this.id.slice(7));
+				ga.slideToggle(300,function(){
+					$(t).toggleClass('is-active');
+				});
+				return !1;
+			});
+			t.aim(":checkbox[name=fmcc]").click(function(){return t.clickFmcc(this)});
+			t.aim(":checkbox[name=grdkc]").click(function(){return t.clickGrdkc(this)});
+			return t;
+		},aim:function(s){
+			return $('#gradeList '+(s||''))
+		},onInit:function(){
+			this.refresh();
+		},onActivateSuccess:function(j){
+			var t=this;
+			t.aim().html(j);
+			t.refresh().dump();
+		},clickFunc:function(bx,n,f){
+			var t=this,v=bx.value,r;
+			r=t._in(v,t.values)?t._del(v):t._add(v,n(v));
+			f&&f();t.dump();
+			return r;
+		},clickFmcc:function(bx){
+			var t=this;
+			return t.clickFunc(bx,function(f){
+				return t.base.src.shashu[f.slice(0,7)]+' '+$('#modelGrade'+f).attr("data-name");
+			},function(){
+				var vs=t._retrieve();
+				t.splice(vs.GRDKC,vs.FMCC,!1),t.values=vs.FMCC.concat(vs.GRDKC);
+			});
+		},clickGrdkc:function(bx){
+			return this.clickFunc(bx,function(g){
+				return $('#grd_'+g).attr("data-name")+' '+$('#modelGrade'+g.slice(0,12)).attr("data-name");
+			});
+		},dump:function(){
+			var t=this;
+			t.aim(':checkbox').removeAttr('checked').removeAttr('disabled');
+			t.values.forEach(function(v){
+				$("#gradeArea_"+v+" :checkbox[name=grdkc]").prop('checked',true).prop('disabled',true);
+			});
+			t.aim(':checkbox').filter(function(){return t._in(this.value,t.values)}).prop('checked',true);
+			return t.dumpDeleteList();
+		},dumpDeleteList:function(){
+			var t=this;
+			return t._dumpDeleteList("#selectedGrds",function(){
+				var e=t.aim(':checkbox[value='+this.id.slice(13)+']')[0];//"tb_del_grade_"で13文字
+				return (e.value.length==12)?t.clickFmcc(e):t.clickGrdkc(e),!1;
+			},'#selectedGrdCount',{12:'選択モデルから削除',17:'選択グレードから削除'});
+		},_getLiHtml:function(n,c,t){
+			return '<button class="btnFunc--deleteSmall" id="tb_del_grade_'+c+'" title="'+t+'">'+n+'</button>'
+		},_getCrHtml:function(){
+			return '<button class="selectItem__clear" onClick="spbl.tb.grade.clear();return false;">条件をクリア</button>'
+		},inhibit:function(){
+			if (!this.base.values.CARC.length) {
+				alert("車名を選択してください。");
+				return !0;
+			}
+		}
+	});
+// 地域 ThickBox制御
+	spbl.tb.area=$.extend({},tbAbs,{
+		vmax:0,//決定時に処理
+		valueKeys:['AR'],
+		reqKey:'area',
+		actDataType:'json',
+		srcKey:'area',
+		dependent:{
+			"0":["4","6","7","1","3","2","8","9","5"],
+			"4":["5600","5670","5620","5660","5630","5661","5640","5662","5650"],
+			"6":["20","23","21","24","22","25"],
+			"7":["40","41","42","43","44","45"],
+			"1":["35","34","30","32","33","31","36"],
+			"3":["48","47","46","50"],
+			"2":["53","54","52","51","55","56"],
+			"8":["60","61","62","63","64"],
+			"9":["70","71","72","73"],
+			"5":["80","81","83","84","82","85","86","87"]
+		},
+		node:function(v,p){
+			this.cb;
+			this.parent;
+			this.children=[];
+			this.addChild=function(c){this.children.push(c)};
+			this.retrieve=function(){
+				if(this.cb.checked)return [this.cb.value];
+				var v=[];
+				this.children.forEach(function(c){
+					v=v.concat(c.retrieve());
+				});
+				return v;
+			};
+			this.get=function(v){
+				if(v==this.cb.value)return this;
+				var tree;
+				b=this.children.some(function(c){
+					tree=c.get(v);
+					return typeof(tree)=='object';
+				});
+				return tree;
+			};
+			this.trail=function(u){
+				!u&&(this.cb.checked=this.parent.cb.checked);
+				this.children.forEach(function(c){c.trail()});
+				return this;
+			};
+			this.offer=function(u){
+				!u&&(this.cb.checked=this.children.every(function(c){return c.cb.checked}));
+				this.parent&&this.parent.offer();
+				return this;
+			};
+			this.construct=function(v,p){
+				this.parent=p||!1;
+				this.cb=$('#arBox'+v, $('#popupWrappermap')).get(0);
+			};
+			this.construct(v,p);
+		},
+		tree:{},
+		onInit:function(){
+			var t=this;
+			t.aim().click(function(){t.clickFunc(this)});
+			t.createTree("0");// 0はツリーのルート「全国」の値
+		},aim:function(s){
+			return $(':checkbox[name=archk]'+(s||''), $('#popupWrappermap'));
+		},createTree:function(v,p){
+			var t=this,n=new t.node(v,p);
+			p?p.addChild(n):(t.tree=n);
+			(t.dependent[v])&&t.dependent[v].forEach(function(c){t.createTree(c,n)});
+		},onActivateSuccess:function(j){
+			var t=this;
+			t.aim().next().find('span:last').text('(0)');
+			$.each(j,function(k,v){t.aim('[value='+k+']').next().find('span:last').text('('+v+')')});
+			t.dump();
+		},clickFunc:function(cb){
+			this.tree.get(cb.value).trail(1).offer(1);
+			return !1;
+		},v2d:function(v){
+			return this.extractName($('#arName'+v)).replace(/すべて$/,"");
+		},dump:function(){
+			var t=this;
+			t.aim().removeAttr('checked');
+			t.values.forEach(function(v){var n=t.tree.get(v);n.cb.checked=!0,n.trail(1)});
+			return t;
+		},setWrap:function(){
+			var t=this;
+			t.values=t.tree.retrieve(),t.values.forEach(function(v){t.dictionary[v]=t.v2d(v)});
+			if(t.values.length>10){
+				alert("指定できる地域は10までです。");
+				return;
+			}
+			return t.set(),!1;
+		}
+	});
+// 市区町村 ThickBox制御
+	spbl.tb.city=$.extend({},tbAbs,{
+		name:"市区町村",
+		valueKeys:['CITY'],
+		reqKey:'city',
+		actDataType:'html',
+		srcKey:'city',
+		ar:'',
+		pjDef:{},
+		refresh:function(){// htmlにJSの効果を与える
+			var t=this;
+			t.aim(":checkbox").click(function(){return t.clickChk(this)});
+		},onInit:function(){
+			this.setAR().refresh();
+		},aim:function(s){
+			return $('#cityList '+(s||''))
+		},onActivateSuccess:function(j){
+			var t=this;
+			t.setAR().aim().html(j);
+			t.retrievePjDef().dump().refresh();
+			t.aim("a").attr('href', '#').click(function(){
+				var p=$.extend({},t.pjDef);
+				p.AR=t.ar,p.CITY=$(':checkbox',$(this).closest('li')).val();
+				return paneljump(p),!1;
+			});
+		},retrievePjDef:function(){
+			var s=$('#pj_def'),v=s.val();
+			s.remove();
+			this.pjDef=v?eval("("+v+")"):{};
+			return this;
+		},clickChk:function(cb){
+			var t=this,v=cb.value,nm=t.extractName($("#cityName"+v));
+			if(!(t._in(v,t.values)?t._del(v):t._add(v,nm)))return !1;
+			return t.dump(),!0;
+		},dump:function(){
+			var t=this;
+			t.aim(':checkbox').removeAttr('checked').filter(function(){return t._in(this.value,t.values)}).prop('checked',true);
+			return this.dumpDeleteList();
+		},dumpDeleteList:function(){
+			var t=this;
+			return t._dumpDeleteList("#selectedCities",function(){
+				return t.clickChk(t.aim(':checkbox[value='+this.id.slice(12)+']')[0]),!1;
+			},'#selectedCityCount');
+		},_getLiHtml:function(n,c){
+			return '<button class="btnFunc--deleteSmall" id="tb_del_city_'+c+'" title="選択市区町村から削除">'+n+'</button>'
+		},_getCrHtml:function(){
+			return '<button class="selectItem__clear" onClick="spbl.tb.city.clear();return false;">条件をクリア</button>'
+		},inhibit:function(){
+			var ar=this.base.values.AR;
+			if((ar.length==1)&&(ar[0].length>1))return !1;
+			alert("都道府県を1つ選択してください。\n※都道府県をまたいでの市区町村選択はできません。");
+			return !0;
+		},setAR:function(){
+			return (this.ar=this.base.values.AR[0]||""),this;
+		},getAR:function(){
+			return this.ar;
+		}
+	});
+// ThickBoxの中身を準備してThickBoxを開く
+	$('.js_thickBtn,.js_thickLink').click(function(){
+		var curTb=($(this).hasClass('js_thickLink'))?$(this).prev('.js_thickBtn')[0]:this;
+		var conf={
+			shashuAnc:{stid:'CS210502',obj:'shashu'},
+			grdAnc:{stid:'CS210503',obj:'grade'},
+			areaAnc:{stid:'CS210501',obj:'area'},
+			cityAnc:{stid:'CS210516',obj:'city'}
+		},cf=conf[curTb.id],o;
+		if(!cf||!(o=spbl.tb[cf.obj])||o.inhibit())return !1;
+		(typeof(reqVos)=='undefined')&&(typeof(s_gi)=='function')&&(reqVos=function(STID){var s=s_gi(s_account);s.pageName=s.eVar1=STID;s.t()});
+		(typeof(reqVos)=='function')&&reqVos(cf.stid);
+		return panelModal.show(cf.obj),o.activate(),!1;
+	});
+
+// モーダルの操作系
+	var panelModal = {
+		target:null
+		,curModal:null
+		,bg:$('#modalOverlay')
+		,init:function(){
+			// close event
+			$("[data-modal=close],#modalOverlay").on("click", panelModal.close);
+			$(window).on("resize", panelModal.resize);
+		}
+		,show:function(target){
+			var t = this;
+			t.curModal = $('[data-modal=' + target + ']');
+			if(!t.curModal) return;
+			t.target=target;
+			// modal display
+			t.curModal.addClass('is-active');
+			t.bg.addClass('is-active');
+			$('html').css('overflow', 'hidden');
+			t.resize();
+		}
+		,close:function(){
+			var t = panelModal;
+			if(!t.curModal)return;
+			// modal hide
+			t.curModal.removeClass('is-active');
+			t.bg.removeClass('is-active');
+			$('html').css('overflow', 'auto');
+			t.target="",t.curModal=null;
+		}
+		,resize:function(){
+			var t = panelModal;
+			if(!t.curModal)return;
+			// win
+			var wScrTop = $(window).scrollTop();
+//			var winH    = $(window).height();
+			var winH    = window.innerHeight || document.documentElement.clientHeight;
+
+			// modal
+			var mTop    = t.elem().offset().top - wScrTop;
+			var mHeadH  = t.elem("[data-modal=header]").outerHeight(true);
+			var mFootH  = t.elem(".modalBar").outerHeight(true);
+			// Maker cnt
+			var $mkrCnt = t.elem("[data-modalMaker=scrollWrap]");
+
+			t.elem("[data-modal=contents]").css('height', winH - mTop - mHeadH);
+			if($mkrCnt.length){
+				var cntTop = $mkrCnt.offset().top - wScrTop
+				$mkrCnt.css('height', winH - cntTop - mFootH);
+			}
+		}
+		,elem:function(e){
+			return $("[data-modal="+this.target+"] " + (e||""));
+		}
+	}
+	panelModal.init();
+});
+
+
+// リンク制御関数 2013-10 ～
+function paneljump(p,f){
+	if(f)return paneljumpSTop(p),!1;
+	var a=[];
+	$.each(p,function(k,v){a.push(k+'='+encodeURIComponent(v))});
+	return(location.href='/usedcar/search.php?'+a.join('&')),!1;
+}
+function paneljumpSTop(p){
+	var a=[],h;
+	['FAIR','TOK','ROUTEID'].forEach(function(k){p[k]&&a.push(k+'='+encodeURIComponent(p[k]))});
+	h='/usedcar/shashu/b'+p.BRDC+'/index.html',a.length&&(h+='?'+a.join('&'))
+	location.href=h;
+}
+function priceGraphChange(p){
+	$(".js-slide-graph").css({'height':'0'});
+	if (!p || p === "0") return;
+
+	var maxVal=Math.max.apply(null,$.map(p, function(o){if (o.value == '999999999') return 0; return o.count;}));
+	var ratio = null;
+	$.each(p,function(k,v){
+		if (v.value == '999999999') return true;
+		ratio = Math.ceil(((v.count / maxVal) * 10)) * 10;
+		$('#js-slide-graph-'+v.value).css({'height':ratio+'%'});
+	});
+}
+
+
+// 特殊車両開閉パネル
+$(function(){
+    $("#campingCars, #van, #welfareVehicle").click(function(){
+        var panelName = "#" + $(this).attr('id') + "Panel";
+        if ($(this).prop("checked")) {
+            $(panelName).show();
+        } else {
+			$(panelName + " input:checkbox").each(function () {
+			    $(this).prop("checked", false);
+			})
+			$(panelName + " select").each(function () {
+				$(this).val('');
+			})
+            $(panelName).hide();
+        }
+    });
+});
+
+// 「閉じる」ボタンスクロール
+$(function(){
+    $("#closeSroll").click(function(){
+        var position = $(".title1").offset();
+		$("html,body").animate({scrollTop:position.top}, 500);
+    });
+});
+
+$(function() {
+	$('#sbmt').one('click', function(){
+		reqCustomLink("None", "", "pc_bklist_searchbtn_click");
+	});
+});

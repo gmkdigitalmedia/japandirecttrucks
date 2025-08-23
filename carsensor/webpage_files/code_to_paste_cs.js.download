@@ -1,0 +1,666 @@
+/****************************************
+* PageGroup
+* ページグルーピングロジックを記述します
+* prop13-30 まで使用可能
+*****************************************/
+var sc_targetURL = location.host + location.pathname;
+
+var sc_vosGroup = ""
+if(			sc_targetURL.match(/www.carsensor.net\/usedcar\/(bt|cartype|b[A-Z]{2}|area|fair|index\.html|search\.php)/)){
+	sc_vosGroup = "物件一覧";
+}else if(	sc_targetURL.match(/www.carsensor.net\/usedcar\/detail*/)){
+	sc_vosGroup = "物件拡大";
+}else if(	sc_targetURL.match(/www.carsensor.net\/newcar\/*/)){
+	sc_vosGroup = "カタログ";
+}else if(	sc_targetURL.match(/www.carsensor.net\/usedcar\/navi*/)){
+	sc_vosGroup = "販売店ナビ系";
+}else if(	sc_targetURL.match(/www.carsensor.net\/shop\/*/)){
+	sc_vosGroup = "販売店SEOページ";
+}else if(	sc_targetURL.match(/www.kyushukuruma.net\/*/) ||
+			sc_targetURL.match(/www.hokkaidocarsensor.net\/*/) ||
+			sc_targetURL.match(/kitakanto-carsensor.net\/*/) ||
+			sc_targetURL.match(/www.tokaicarsensor.net\/*/) ||
+			sc_targetURL.match(/www.kansaicarsensor.net\/*/)){
+	sc_vosGroup = "エリアサテライト全体";
+}else if(	sc_targetURL.match(/^http:\/\/[a-z]+[to|do|hu|ken].carsensor.net\/*/)){
+	sc_vosGroup = "都道府県ページ全体";
+}
+s.prop13 = sc_vosGroup;
+
+/****************************************
+* VOS同等　成果ページ番号
+* 成果ページロード時にeventをセットします
+*****************************************/
+var STID		= (trace_p)? trace_p : s.getQueryParam('STID');
+var ROUTEID		= s.getQueryParam('ROUTEID');
+var FAIR		= s.getQueryParam('FAIR');
+var hpsFlg		= s.getQueryParam('hps');
+
+var sc_vosEvent	= "";
+
+//inquiry_mm.php
+if(sc_targetURL.match(/www.carsensor.net\/usedcar\/inquiry_mm.php*/)){
+	if(ROUTEID == "" && STID == "CS211420"){
+		//CS本体完了（MtoM＆MtoF）
+		sc_vosEvent = "event3,event16,event17";
+	}else if(ROUTEID == "" && STID == "CS211430"){
+		//通常MtoMレコメン完了
+		sc_vosEvent = "event5,event16,event17";
+	}else if(STID == "CS211420" || STID == "CS211430" || STID == "EG211420" || STID == "EG211430" ){
+		//その他完了１（本体ROUTEID系＋ラボ）
+		if(	ROUTEID == "edge"){
+			sc_vosEvent = "event11,event17";
+		}else{
+			sc_vosEvent = "event12,event17";
+		}
+	}else if(STID == "CS211400" || STID == "EG211400" || STID == "CS211440"){
+		sc_vosEvent = "event14";
+	}else if(STID == "CS211470" || STID == "CS211480"){
+		sc_vosEvent = "event295";
+	}
+//inquiry.php
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/inquiry.php*/)){
+	if(ROUTEID == "" && (STID == "CS211320" || STID == "CS211330")){
+		//CS本体完了（MtoM＆MtoF）
+		sc_vosEvent = "event3,event16,event17";
+	}else if(STID == "CS211320" || STID == "CS211330" || STID == "EG211320" || STID == "EG211330"){
+		//その他完了１（本体ROUTEID系＋ラボ）
+		if(	ROUTEID == "edge"){
+			sc_vosEvent = "event11,event17";
+		}else{
+			sc_vosEvent = "event12,event17";
+		}
+	}else if(STID == "CS211300" || STID == "EG211300"){
+		sc_vosEvent = "event14";
+	}
+//one_stock.php
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/one_stock.php*/)){
+	if(ROUTEID == "" && STID == "CS214120"){			//一発カンタン在庫確認完了（MtoM＆MtoF）
+		sc_vosEvent = "event4,event16,event17";
+	}else if(ROUTEID == "" && (STID == "CS214020" || STID == "CS214030")){
+		sc_vosEvent = "event4,event16,event17";
+	}else if(ROUTEID == "" && STID == "CS214130"){		//一発カンタン在庫確認レコメン完了
+		sc_vosEvent = "event6,event16,event17";
+	}else if(STID == "CS214120" || STID == "CS214020" || STID == "CS214030" || STID == "CS214130" || STID == "EG214120" || STID == "EG214020" || STID == "EG214030" || STID == "EG214130"){	//その他完了１（本体ROUTEID系＋ラボ）
+		if(	ROUTEID == "edge"){
+			sc_vosEvent = "event11,event17";
+		}else{
+			sc_vosEvent = "event12,event17";
+		}
+	}else if(STID == "CS214100" || STID == "CS214000" || STID == "EG214100" || STID == "EG214000"){
+		sc_vosEvent = "event14";
+	}
+//hope_budget.php
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/hope_budget.php*/)){
+	if(ROUTEID == "" && (STID == "CS210515" || STID == "CS210517")){			//ホンネ予算相談完了（レコメン有無）
+		sc_vosEvent = "event18,event16,event17";
+	}else if(STID == "CS210515" || STID == "CS210517" || STID == "EG210515" || STID == "EG210517"){	//その他完了１（本体ROUTEID系＋ラボ）
+		if(	ROUTEID == "edge"){
+			sc_vosEvent = "event11,event17";
+		}else{
+			sc_vosEvent = "event12,event17";
+		}
+	}else if(STID == "CS210513" || STID == "EG210513"){
+		sc_vosEvent = "event14";
+	}
+//inquiry_ex.php
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/inquiry_ex.php*/)){
+	if(STID == "CS241420"){	//MSN完了
+		sc_vosEvent = "event9,event17";
+	}else if(STID == "CS302420" || STID == "CS302320"){	//その他完了２（その他提携＋WebAPI）
+		sc_vosEvent = "event12,event17";
+	}else if(STID.match(/CS\d{4}00/)){
+		sc_vosEvent = "event14";
+	}
+//inquiry_mm_ex.php
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/inquiry_mm_ex.php*/)){
+	if(STID == "CS303400" || STID == "CS303500" || STID == "CS300400" || STID == "CS300500" ){
+		sc_vosEvent = "event14";	// 入力画面すべて
+  	}else if(STID == "CS300420" || STID == "CS300520"){	//ドリコム（自動車EX）完了
+		sc_vosEvent = "event10,event17";
+	} else if(STID == "CS303420" || STID == "CS303520"){
+		sc_vosEvent = "event12,event17";		// その他完了２（その他提携＋WebAPI＋Y!ショッピング）
+	}
+//inquiry_hps.php(with iframe)
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/inquiry_hps.php*/)){
+	if(STID == "CSH00024" || STID == "CSH00027" || STID == "CSIF0030" || STID == "CSIF0040"){
+		sc_vosEvent = "event14";
+	}else if(STID == "CSH00026" || STID == "CSH00029" || STID == "CSIF0032" || STID == "CSIF0042"){
+		sc_vosEvent = "event17,event20";
+	}
+//lab_one.php
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/lab_one.php*/)){
+	if(STID.match(/CS26140\d/)){
+		sc_vosEvent = "event14";
+	}else if(STID.match(/CS26142./)){
+		sc_vosEvent = "event11,event17";
+	}
+//lab_multi.php
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/lab_multi.php*/)){
+	if(STID.match(/^CS28142./)){		//その他完了１（本体ROUTEID系＋ラボ）
+		sc_vosEvent = "event11,event17";
+	}else if(STID.match(/CS28140\d/)){
+		sc_vosEvent = "event14";
+	}
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/(bt|cartype|b[A-Z]{2}|area|fair|index\.html|search\.php)/)){
+	sc_vosEvent = "event1";
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/detail*/)){
+	sc_vosEvent = "event2,prodView";
+}else if(sc_targetURL.match(/www.carsensor.net\/$/)){
+	sc_vosEvent = "event13";
+// MAP印刷
+}else if(sc_targetURL.match(/www.carsensor.net\/usedcar\/navimap.php*/)){
+	if(STID=="CS210902"){
+		sc_vosEvent = "event15";
+	}
+}
+// 会員本登録完了
+else if(sc_targetURL.match(/www.carsensor.net\/member/)) {
+	// 完了
+	if(STID == "CS501500") {
+		sc_vosEvent = "event19";
+	}
+}
+// 直売CS
+else if(sc_targetURL.match(/www.carsensor.net\/direct/)) {
+	// 購入完了(クレジット)
+	if(STID == "CSAA0043") {
+		sc_vosEvent = "event21,event24";
+	}
+	// 購入完了(銀行振込)
+	if(STID == "CSAA0042") {
+		sc_vosEvent = "event22,event24";
+	}
+	// 購入完了(フリーローン)
+	if(STID == "CSAA0045") {
+		sc_vosEvent = "event23,event24";
+	}
+	// 購入完了(クレジットGMO)
+	if(STID == "CSAA0046") {
+		sc_vosEvent = "event34,event24";
+	}
+	// 注文完了(リース)
+	if(STID == "CSAA0242") {
+		sc_vosEvent = "event39";
+	}
+	// 注文完了(リース(新車))
+	if(STID == "CSAA0442") {
+		sc_vosEvent = "event41";
+	}
+	// 注文完了(オートローン販売店指定)
+	if(STID == "CSAA0047") {
+		sc_vosEvent = "event40,event24";
+	}
+	// 注文完了(中古KINTO)
+	if(STID == "CSAA0542") {
+		sc_vosEvent = "event301";
+	}
+	// 注文完了(中古KINTO)
+	if(STID == "CSAA0542") {
+		sc_vosEvent = "event301";
+	}
+	// 注文完了(新車KINTO)
+	if(STID == "CSAA0642") {
+		sc_vosEvent = "event302";
+	}
+}
+/*****************************************
+* キャンペーン
+*****************************************/
+else if(STID == "CSLPCP31"){
+	if(typeof cp_event19 !== 'undefined' && cp_event19 == "1"){
+		sc_vosEvent = "event19";
+	}
+}
+else if(sc_targetURL.match(/www.carsensor.net\/usedcar/)){
+	if(STID == "CS210610" && cs_sc_data.cssc_topFwSearch && cs_sc_data.cssc_topFwSearch == "1"){
+		sc_vosEvent = "event100";
+	}
+}
+s.events=sc_vosEvent;
+
+/****************************************************/
+
+/****************************************
+* MtoM問合せ内容
+*****************************************/
+if((STID=="CS211420" || STID=="CS211430")){
+	if (cs_sc_data.cssc_qtyp && cs_sc_data.cssc_qtyp!="") {
+		s.prop4 = cs_sc_data.cssc_qtyp;
+	}
+	if (cs_sc_data.cssc_eVar89) {
+		s.eVar89 = cs_sc_data.cssc_eVar89;
+	}
+	if (cs_sc_data.cssc_prop3) {
+		s.prop3 = cs_sc_data.cssc_prop3;
+	}
+	s.eVar164 = "{"+cs_sc_data.cssc_VISITINQ+","+cs_sc_data.cssc_RAITENQTYP+","+cs_sc_data.cssc_KIBOU1_DATE+","+cs_sc_data.cssc_KIBOU2_DATE+","+cs_sc_data.cssc_TEL+"}";
+}
+
+/****************************************
+* 直売CSバナー流入
+*****************************************/
+s.prop27 = s.getQueryParam('fed');
+s.eVar27 = s.prop27;
+
+/****************************************
+* URL Parameter
+* URLパラメータから取得する値をここに記述します
+* prop31-40 まで使用可能
+*****************************************/
+s.prop31=s.getQueryParam('NINTEI');
+s.eVar31=s.prop31;
+
+
+/****************************************************/
+
+/****************************************
+* evar28, prop28
+*****************************************/
+if(!hpsFlg && ROUTEID == '') {
+	var no28_cookie_name = 'PC_INQ_CHANGE_ITEM';
+	var no28_cookie_val = (s.c_r(no28_cookie_name).match(/^A|B|C$/))?s.c_r(no28_cookie_name) : '';
+	if(no28_cookie_val != "") {
+		s.eVar28 = no28_cookie_name + ':' + no28_cookie_val;
+		s.prop28 = STID + ':' + s.eVar28;
+	}
+}
+
+/****************************************
+* evar33, prop33
+*****************************************/
+if(!hpsFlg && ROUTEID == '') {
+	var no33_cookie_name = 'PC_360_ANNOTATION';
+	var no33_cookie_val = (s.c_r(no33_cookie_name).match(/^[A-Z]$/))?s.c_r(no33_cookie_name) : '';
+	if(no33_cookie_val != "") {
+		s.eVar33 = no33_cookie_name + ':' + no33_cookie_val;
+		s.prop33 = STID + ':' + s.eVar33;
+	}
+}
+
+
+/****************************************
+* evar28, prop28
+*****************************************/
+if(!hpsFlg && ROUTEID == '') {
+	var no28_cookie_name = 'PC_LOAN_FS';
+	var no28_cookie_val = (s.c_r(no28_cookie_name).match(/^[A-Z]$/))?s.c_r(no28_cookie_name) : '';
+	if(no28_cookie_val != "") {
+		s.eVar28 = no28_cookie_name + ':' + no28_cookie_val;
+		s.prop28 = STID + ':' + s.eVar28;
+	}
+}
+
+/****************************************
+* evar48, prop48 グロース専用
+*****************************************/
+if(!hpsFlg && ROUTEID == '') {
+	var no48_cookie_list = [];
+	if('def_ux_adobe_analytics' in window && def_ux_adobe_analytics.length > 0){
+		for(var i = 0, l = def_ux_adobe_analytics.length; i < l; i++){
+			var no48_cookie_name = def_ux_adobe_analytics[i],
+				no48_cookie_val = (s.c_r(no48_cookie_name).match(/^[A-Z]$/))?s.c_r(no48_cookie_name) : '';
+			if(no48_cookie_val != '') no48_cookie_list.push(no48_cookie_name + ':' + no48_cookie_val);
+		}
+	}
+	if(no48_cookie_list.length > 0){
+		s.eVar48 = no48_cookie_list.join(',');
+		s.prop48 = s.eVar48;
+	}
+}
+
+/****************************************
+* evar141
+*****************************************/
+if(!hpsFlg && ROUTEID == '') {
+	var no141_cookie_name = 'LIST_SORT_PT_20240910';
+	var no141_cookie_val = (s.c_r(no141_cookie_name).match(/^[A-Z]$/))?s.c_r(no141_cookie_name) : '';
+	if(no141_cookie_val != "") {
+		s.eVar141 = no141_cookie_name + ':' + no141_cookie_val;
+	}
+}
+
+/****************************************
+* evar146
+*****************************************/
+if(!hpsFlg && ROUTEID == '') {
+	var no146_cookie_name = 'DIRECT_NEWCAR_LINK_FS3';
+	var no146_cookie_val = (s.c_r(no146_cookie_name).match(/^[A-Z]$/))?s.c_r(no146_cookie_name) : '';
+	if(no146_cookie_val != "") {
+		s.eVar146 = no146_cookie_name + ':' + no146_cookie_val;
+	}
+}
+
+/****************************************
+* 直売CS カタログ車種詳細画面UI ABテスト
+*****************************************/
+var cVal = (s.c_r('DIRECT_NEWCAR_LINK_AB').match(/^A|B$/))?s.c_r('DIRECT_NEWCAR_LINK_AB'):"";
+if(cVal != "") {
+	var abtestScKey = "DIRECT_NEWCAR_LINK_AB:" + cVal;
+	s.eVar80 = abtestScKey;
+}
+
+/****************************************
+* 直売CS 物件一覧画面UI ABテスト
+*****************************************/
+var cVal = (s.c_r('DIRECT_LIST_UI_AB').match(/^A|B|C$/))?s.c_r('DIRECT_LIST_UI_AB'):"";
+if(cVal != "") {
+	var abtestScKey = "DIRECT_LIST_UI_AB:" + cVal;
+	s.eVar81 = abtestScKey;
+}
+
+/****************************************
+* 直売CS 本体導線 ABテスト
+*****************************************/
+//var directLinkAbVal = (s.c_r('DIRECT_LINK_AB').match(/^A|B/))?s.c_r('DIRECT_LINK_AB'):"";
+//if(directLinkAbVal != "") {
+//	var abtestScKey = "DIRECT_LINK_AB:" + directLinkAbVal;
+//	s.eVar77 = abtestScKey;
+//}
+
+/****************************************
+* 直売CS DETAIL eVar86
+*****************************************/
+if(STID == "CSAA0030") {
+	s.eVar86 = aa_bkcd +":"+ smell_sc_data;
+}
+
+/****************************************
+* 直売CS SEARCH eVar82,eVar83
+*****************************************/
+if(STID == "CSAA0020" || STID == "CSAA0220" || STID == "CSAA0620"){
+	var serachparam = new Array();
+	searchParam = setVosDirectSearch();
+	s.eVar82 = searchParam[0];
+	s.eVar83 = searchParam[1];
+}
+
+/****************************************
+* CV NPS ENQUETE(evar78)
+*****************************************/
+if(STID == "CSENQ010" || STID == "CSENQ011" || STID == "CSENQ012") {
+	var cvNpsEnq = (s.c_r('PC_ENQ_NPS_CV') != '') ? s.c_r('PC_ENQ_NPS_CV') : '';
+	s.eVar78 = "PC_ENQ_NPS_CV:" + cvNpsEnq;
+}
+
+/****************************************
+* Attribute Information
+*****************************************/
+if(ROUTEID == "" && s.c_r('CS_ATTRIBUTE_INFO')){
+	var attribute_info = s.c_r('CS_ATTRIBUTE_INFO');
+	if(attribute_info != '00'){
+		s.eVar76 = attribute_info;
+	}
+}
+
+/****************************************
+* Segment Information
+*****************************************/
+if(ROUTEID == "" && s.c_r('CS_SEGMENT_INFO')){
+	s.eVar79 = s.c_r('CS_SEGMENT_INFO');
+}
+
+/****************************************
+* 詳細　CSA保証有無
+*****************************************/
+if(STID == "CS210840") {
+	s.eVar40 = cs_sc_data.cssc_planCSA;
+	s.prop40 = cs_sc_data.cssc_planCSA;
+}
+
+/****************************************
+* 詳細　拡大コマ有無
+*****************************************/
+if(STID == "CS210840") {
+	s.eVar26 = (cs_sc_data.cssc_strikingFlg)?cs_sc_data.cssc_strikingFlg:"";
+	s.prop26 = (cs_sc_data.cssc_strikingFlg)?cs_sc_data.cssc_strikingFlg:"";
+}
+
+/****************************************
+* 成果ページカテゴリー
+* 成果ページが複数ある場合に、成果ページのカテゴリーをセット
+* 例）ユーザ登録ページ、申込みページ 等
+*****************************************/
+s.eVar6="";
+
+/****************************************
+* zaco新設
+*****************************************/
+var TRCD = s.getQueryParam('TRCD');
+if(TRCD!="") {
+	s.eVar8 = TRCD;
+}
+if("cs_sc_data" in window) {
+	if(STID == "CS210840" || STID == "CS210820"){
+		//s.products=cs_sc_data.cssc_kenCd + ";" + cs_sc_data.cssc_carCd;
+		s.products=";" + cs_sc_data.cssc_carCd + ";;;;" + "evar13=" + cs_sc_data.cssc_kenCd;
+		s.eVar10=s.prop18=cs_sc_data.cssc_shopCd;
+		s.prop14=cs_sc_data.cssc_kenCd;
+		s.prop15=cs_sc_data.cssc_carCd;
+		s.prop17=cs_sc_data.cssc_planCnt;
+		s.prop19=cs_sc_data.cssc_aucCnt;
+		s.prop22=cs_sc_data.cssc_bkknCd;
+		s.eVar47=s.prop47=cs_sc_data.cssc_ninteiFlg+","+cs_sc_data.cssc_totalPoints+","+cs_sc_data.cssc_exPoints+","+cs_sc_data.cssc_inPoints+","+cs_sc_data.cssc_repairPoints+","+cs_sc_data.cssc_organPoints;
+		s.eVar73=s.prop73=cs_sc_data.cssc_assessFlg;
+		s.eVar74=s.prop74=cs_sc_data.cssc_makerHyokasho;
+		s.eVar116=cs_sc_data.cssc_listNo;
+	}
+
+	var SKIND = s.getQueryParam('SKIND');
+	if(STID == "CS210610"){
+		s.eVar11=s.prop16=cs_sc_data.cssc_hits;
+		if(SKIND == "1" || (cs_sc_data.cssc_topFwSearch != null && cs_sc_data.cssc_topFwSearch == "1")){
+			s.eVar12=s.prop23=cs_sc_data.cssc_keyWord;
+		}
+	}
+
+	if(cs_sc_data.cssc_recCnt) {
+		s.prop21=cs_sc_data.cssc_recCnt;
+	}
+	if(cs_sc_data.cssc_inqCnt) {
+		s.prop20=cs_sc_data.cssc_inqCnt;
+	}
+	if(STID == "CSS00011"){
+		s.prop34=cs_sc_data.cssc_propEvar34;
+		s.prop35=cs_sc_data.cssc_propEvar35;
+		s.prop36=cs_sc_data.cssc_propEvar36;
+		s.eVar34=s.prop34;
+		s.eVar35=s.prop35;
+		s.eVar36=s.prop36;
+	}
+
+	/****************************************
+	* 物件一覧 検索条件
+	* prop 50-69, 71
+	* eVar 50-69, 71
+	*****************************************/
+	if(STID == "CS210610"){
+		s.prop50=cs_sc_data.cssc_AR + "," + cs_sc_data.cssc_CITY;
+		s.prop51=cs_sc_data.cssc_BRDC+","+cs_sc_data.cssc_CARC+","+cs_sc_data.cssc_FMCC+","+cs_sc_data.cssc_GRDKC+",nil";
+		s.prop52=cs_sc_data.cssc_PMIN+":"+cs_sc_data.cssc_PMAX ;
+		s.prop53=cs_sc_data.cssc_YMIN+":"+cs_sc_data.cssc_YMAX ;
+		s.prop54=cs_sc_data.cssc_SMIN+":"+cs_sc_data.cssc_SMAX;
+		s.prop55=cs_sc_data.cssc_HMIN+":"+cs_sc_data.cssc_HMAX+","+cs_sc_data.cssc_optTub;
+		s.prop56=cs_sc_data.cssc_BT;
+		s.prop57=cs_sc_data.cssc_CL;
+		s.prop58=cs_sc_data.cssc_spD+","+cs_sc_data.cssc_spH+","+cs_sc_data.cssc_spY+","+cs_sc_data.cssc_spF+","+cs_sc_data.cssc_spK+","+cs_sc_data.cssc_spS+","+cs_sc_data.cssc_spC+","+cs_sc_data.cssc_spP;
+		s.prop59=cs_sc_data.cssc_SLST;
+		s.prop60=cs_sc_data.cssc_optPws+","+cs_sc_data.cssc_optPww+","+cs_sc_data.cssc_optAih+","+cs_sc_data.cssc_optWar+","+cs_sc_data.cssc_optCld+","+
+				 cs_sc_data.cssc_optHks+","+cs_sc_data.cssc_optEsh+","+cs_sc_data.cssc_optFsh+","+cs_sc_data.cssc_optBsh+","+cs_sc_data.cssc_opt3sh+","+
+				 cs_sc_data.cssc_optWtr+","+cs_sc_data.cssc_optFef+","+cs_sc_data.cssc_optRod+","+cs_sc_data.cssc_optSrf+","+cs_sc_data.cssc_optEtc+","+
+				 cs_sc_data.cssc_optKrs+","+cs_sc_data.cssc_optBmf+","+cs_sc_data.cssc_optHid+","+cs_sc_data.cssc_optStl+","+cs_sc_data.cssc_optAru+","+
+				 cs_sc_data.cssc_optArj+","+cs_sc_data.cssc_optArs+","+cs_sc_data.cssc_optAbs+","+cs_sc_data.cssc_optEsc+","+cs_sc_data.cssc_optArc+","+cs_sc_data.cssc_AUD+","+cs_sc_data.cssc_CNAVI+","+
+				 cs_sc_data.cssc_optSmk+","+cs_sc_data.cssc_optRsm+","+
+				 cs_sc_data.cssc_optLed+","+cs_sc_data.cssc_optOtm+","+cs_sc_data.cssc_optShh+","+cs_sc_data.cssc_optSha+","+cs_sc_data.cssc_optPcs+","+
+				 cs_sc_data.cssc_optCrs+","+cs_sc_data.cssc_optPrk+","+cs_sc_data.cssc_optObs+","+cs_sc_data.cssc_optCrt+","+cs_sc_data.cssc_optFrm+","+
+				 cs_sc_data.cssc_optSdk+","+cs_sc_data.cssc_optMlt+","+cs_sc_data.cssc_optIdl+","+cs_sc_data.cssc_optEco+","+cs_sc_data.cssc_optPow+","+
+				 cs_sc_data.cssc_optLft+","+cs_sc_data.cssc_optCnavi+","+cs_sc_data.cssc_optAud;
+		s.prop61=cs_sc_data.cssc_NINTEI;
+		s.prop62=cs_sc_data.cssc_NCAR+","+cs_sc_data.cssc_DLR+","+cs_sc_data.cssc_optCup+","+cs_sc_data.cssc_optRep+","+cs_sc_data.cssc_CSHOSHO+","+cs_sc_data.cssc_HOSHO;
+		s.prop63=cs_sc_data.cssc_NEW;
+		s.prop64=cs_sc_data.cssc_TCOST;
+		s.prop65=cs_sc_data.cssc_PLAN;
+		s.prop66=cs_sc_data.cssc_FUEL+","+cs_sc_data.cssc_DNUM+","+cs_sc_data.cssc_KUDO+","+cs_sc_data.cssc_SLIDE+","+cs_sc_data.cssc_ST+","+cs_sc_data.cssc_TEIIN;
+		s.prop67=cs_sc_data.cssc_SZAN+","+cs_sc_data.cssc_optRnu+","+cs_sc_data.cssc_optWof+","+cs_sc_data.cssc_optTtk+","+cs_sc_data.cssc_optNsf+","+cs_sc_data.cssc_MPHOTO+","+cs_sc_data.cssc_optMov+","+cs_sc_data.cssc_NOTKEI+","+cs_sc_data.cssc_NOTBV+","+cs_sc_data.cssc_360VIEW;
+		s.prop68=cs_sc_data.cssc_SORT;
+		s.prop69=cs_sc_data.cssc_SHOP;
+		s.prop71=cs_sc_data.cssc_PAGE;
+		s.prop140=cs_sc_data.cssc_optAhr+","+cs_sc_data.cssc_optLas+","+cs_sc_data.cssc_optHdc+","+cs_sc_data.cssc_optAhb+","+cs_sc_data.cssc_optAis+","+cs_sc_data.cssc_optRcu+","+
+				  cs_sc_data.cssc_optDtd+","+cs_sc_data.cssc_opt15w+","+cs_sc_data.cssc_optDdr+","+cs_sc_data.cssc_optDaa+","+cs_sc_data.cssc_optAps+","+cs_sc_data.cssc_optSap+","+
+				  cs_sc_data.cssc_optAcc+","+cs_sc_data.cssc_optAlh+","+cs_sc_data.cssc_optFfl+","+cs_sc_data.cssc_optBsm+","+cs_sc_data.cssc_optRct+","+cs_sc_data.cssc_optRrf+","+
+				  cs_sc_data.cssc_optApa+","+cs_sc_data.cssc_CCBASE+","+cs_sc_data.cssc_CCBT+","+cs_sc_data.cssc_CCCAC+","+cs_sc_data.cssc_CCNUS+","+cs_sc_data.cssc_optCcbb+","+
+				  cs_sc_data.cssc_optCcnb+","+cs_sc_data.cssc_optCcdb+","+cs_sc_data.cssc_optCcpb+","+cs_sc_data.cssc_optCcpa+","+cs_sc_data.cssc_optCcpe+","+cs_sc_data.cssc_optCcab+","+
+				  cs_sc_data.cssc_optCcaa+","+cs_sc_data.cssc_optCcsp+","+cs_sc_data.cssc_optCcdc+","+cs_sc_data.cssc_optCcin+","+cs_sc_data.cssc_optCcep+","+cs_sc_data.cssc_optCcge+","+
+				  cs_sc_data.cssc_CCACC+","+cs_sc_data.cssc_CCDCC+","+cs_sc_data.cssc_CCSUB+","+cs_sc_data.cssc_optCcsi+","+cs_sc_data.cssc_optCcst+","+cs_sc_data.cssc_optCcmw+","+
+				  cs_sc_data.cssc_optCcf3+","+cs_sc_data.cssc_optCcfc+","+cs_sc_data.cssc_optCcsh+","+cs_sc_data.cssc_optCcwc+","+cs_sc_data.cssc_optCcwh+","+cs_sc_data.cssc_optCcwt+","+
+				  cs_sc_data.cssc_optCcdt+","+cs_sc_data.cssc_optCcra+","+cs_sc_data.cssc_optCcwa+","+cs_sc_data.cssc_optCcff+","+cs_sc_data.cssc_optCcve+","+cs_sc_data.cssc_optCcrv+","+
+				  cs_sc_data.cssc_optCctc+","+cs_sc_data.cssc_optCcsa+","+cs_sc_data.cssc_optCcpr+","+cs_sc_data.cssc_optCcso+","+cs_sc_data.cssc_optCcsd+","+cs_sc_data.cssc_optCctv+","+
+				  cs_sc_data.cssc_optCcta+","+cs_sc_data.cssc_optCchm+","+cs_sc_data.cssc_optCchs+","+cs_sc_data.cssc_optCccu+","+cs_sc_data.cssc_VTBT+","+cs_sc_data.cssc_VTSER+","+
+				  cs_sc_data.cssc_VTSTW+","+cs_sc_data.cssc_VTFLC+","+cs_sc_data.cssc_VTCAC+","+cs_sc_data.cssc_VTCRC+","+cs_sc_data.cssc_VTPOG+","+cs_sc_data.cssc_optVtf5+","+
+				  cs_sc_data.cssc_optVt20+","+cs_sc_data.cssc_optVt30+","+cs_sc_data.cssc_optVtcd+","+cs_sc_data.cssc_optVtcl+","+cs_sc_data.cssc_optVtsd+","+cs_sc_data.cssc_optVtto+","+
+				  cs_sc_data.cssc_optVttd+","+cs_sc_data.cssc_optVtlh+","+cs_sc_data.cssc_optVtlr+","+cs_sc_data.cssc_optVtrw+","+cs_sc_data.cssc_optVtbe+","+cs_sc_data.cssc_optVths+","+
+				  cs_sc_data.cssc_optVtcu+","+cs_sc_data.cssc_WVCAC+","+cs_sc_data.cssc_WVWHC+","+cs_sc_data.cssc_WVSTC+","+cs_sc_data.cssc_optWvea+","+cs_sc_data.cssc_optWvrp+","+
+				  cs_sc_data.cssc_optWvrr+","+cs_sc_data.cssc_optWvlr+","+cs_sc_data.cssc_optWvlp+","+cs_sc_data.cssc_optWvdr+","+cs_sc_data.cssc_optWvsl+","+cs_sc_data.cssc_optWves+","+
+				  cs_sc_data.cssc_optWvrl+","+cs_sc_data.cssc_optWvrc+","+cs_sc_data.cssc_optWvwi+","+cs_sc_data.cssc_optWvcl+","+cs_sc_data.cssc_optWvss+","+cs_sc_data.cssc_optWvha+","+
+				  cs_sc_data.cssc_optWvla+","+cs_sc_data.cssc_optWvsg+","+cs_sc_data.cssc_optWvap+","+cs_sc_data.cssc_optWvba+","+cs_sc_data.cssc_optWvhs+","+
+				  cs_sc_data.cssc_optWvcu;
+		s.eVar50=s.prop50;
+		s.eVar51=s.prop51;
+		s.eVar52=s.prop52;
+		s.eVar53=s.prop53;
+		s.eVar54=s.prop54;
+		s.eVar55=s.prop55;
+		s.eVar56=s.prop56;
+		s.eVar57=s.prop57;
+		s.eVar58=s.prop58;
+		s.eVar59=s.prop59;
+		s.eVar60=s.prop60;
+		s.eVar61=s.prop61;
+		s.eVar62=s.prop62;
+		s.eVar63=s.prop63;
+		s.eVar64=s.prop64;
+		s.eVar65=s.prop65;
+		s.eVar66=s.prop66;
+		s.eVar67=s.prop67;
+		s.eVar68=s.prop68;
+		s.eVar69=s.prop69;
+		s.eVar71=s.prop71;
+		s.eVar114=cs_sc_data.cssc_bukkenCdList1;
+		s.eVar115=cs_sc_data.cssc_bukkenCdList2;
+		s.eVar140=s.prop140;
+	}
+}
+/****************************************
+* 会員情報
+*****************************************/
+var memberKbn=((typeof(isMember)!="undefined")&&(isMember))?2:1;
+var loginKbn=((typeof(isLogined)!="undefined")&&(isLogined))?2:1;
+var transferKbn=(typeof(isTransfer)!="undefined")?isTransfer:0;
+transferKbn=(!isNaN(transferKbn))?Number(transferKbn):0;
+
+s.eVar24=memberKbn+":"+loginKbn+":"+transferKbn;
+s.prop24=s.eVar24+":"+STID;
+if(STID=="CS501500"){
+	s.eVar25=routeKbn;
+	s.prop25=s.eVar25+":"+STID;
+}
+
+/****************************************
+* CSUUID_DWH集計用
+*****************************************/
+s.eVar37=s.prop37=s.c_r('CSUUID');
+
+/****************************************
+* .recruit.co.jp 配下で参照
+*****************************************/
+if (location.host.match(/\.recruit\.co\.jp/)){
+	var sc_ap=s.getQueryParam('sc_ap');
+	var scVars=sc_ap.split(':');
+	if(sc_ap&&scVars.length>=5){
+		s.pageName=STID;
+		if(scVars[0]!==''&&scVars[1]!==''&&scVars[2]!==''&&!isNaN(scVars[2])){
+			s.eVar24=scVars[0]+":"+scVars[1]+":"+scVars[2];
+			s.prop24=s.eVar24+":"+STID;
+		}
+		if(scVars[3]!==''){
+			s.eVar25=scVars[3];
+			s.prop25=s.eVar25+":"+STID;
+		}
+	}
+}
+
+/****************************************
+* 2020.05 新規計測イベントなど実装
+ユーザーIDなどはeVar130 ~ 136で計測
+トランザクション時間は イベントシリアライズ用に数字のみ抜粋
+トランザクション金額は 数字データのみ抽出
+*****************************************/
+if (typeof cs_sc_data !== 'undefined') {
+	var aa_bukkennNum, aa_eventSerializeId, aa_transactionPrice,
+	aa_transactionCompany,aa_transactionShop,combinedTransactionInfoArray;
+
+	if (cs_sc_data.cssc_transactionUser && cs_sc_data.cssc_transactionUser!="") {
+		s.contextData['eVar130'] = cs_sc_data.cssc_transactionUser;
+	}
+
+	if (cs_sc_data.cssc_transactionAddress && cs_sc_data.cssc_transactionAddress!="") {
+		s.contextData['eVar131'] = cs_sc_data.cssc_transactionAddress;
+	}
+
+	if (cs_sc_data.cssc_transactionShopId && cs_sc_data.cssc_transactionShopId!="") {
+		s.contextData['eVar132'] = cs_sc_data.cssc_transactionShopId;
+	}
+
+	if (cs_sc_data.cssc_transactionBukkennId && cs_sc_data.cssc_transactionBukkennId!="") {
+		s.contextData['eVar133'] = cs_sc_data.cssc_transactionBukkennId;
+		aa_bukkennNum = cs_sc_data.cssc_transactionBukkennId.split(",").length
+	}
+
+	if (cs_sc_data.cssc_transactionId && cs_sc_data.cssc_transactionId!="") {
+		s.contextData['eVar134'] = cs_sc_data.cssc_transactionId;
+	}
+
+	if (cs_sc_data.cssc_transactionCompanyCd && cs_sc_data.cssc_transactionCompanyCd!="") {
+		s.contextData['eVar135'] = cs_sc_data.cssc_transactionCompanyCd;
+	}
+
+	if (cs_sc_data.cssc_transactionPath && cs_sc_data.cssc_transactionPath!="") {
+		s.contextData['eVar136'] = cs_sc_data.cssc_transactionPath;
+	}
+
+	if (cs_sc_data.cssc_transactionTime && cs_sc_data.cssc_transactionTime!="") {
+		aa_eventSerializeId = cs_sc_data.cssc_transactionTime.replace(/[^0-9]/g,"")
+	}
+
+	if(cs_sc_data.cssc_transactionPrice && cs_sc_data.cssc_transactionPrice!="") {
+		aa_transactionPrice = cs_sc_data.cssc_transactionPrice.replace(/[^0-9]/g,"")
+	}
+
+	if(cs_sc_data.cssc_transactionShopId && cs_sc_data.cssc_transactionShopId!="" && cs_sc_data.cssc_transactionCompanyCd && cs_sc_data.cssc_transactionCompanyCd!="" && s.events.match(/\bevent17\b/)){
+		// まとめて問い合わせのカンマがついてきたときの処理
+		aa_transactionShop = cs_sc_data.cssc_transactionShopId.split(',');
+		aa_transactionCompany = cs_sc_data.cssc_transactionCompanyCd.split(',');
+		if(aa_transactionCompany.length  === aa_transactionShop.length){
+			combinedTransactionInfoArray = [];
+			for(let i = 0; i<aa_transactionShop.length; i++){			
+				combinedTransactionInfoArray.push(aa_transactionCompany[i].concat(aa_transactionShop[i]));
+			}
+			s.contextData['eVar129'] = combinedTransactionInfoArray.join(',');
+		}
+	}
+
+	if(aa_bukkennNum != null && aa_eventSerializeId != null && aa_transactionPrice != null) {
+		s.events = s.apl(s.events, "event130:" + aa_eventSerializeId + ",event131=" + aa_transactionPrice + ":" + aa_eventSerializeId + ",event132=" + aa_bukkennNum + ":" + aa_eventSerializeId, ",");
+	}
+}
+
+/****************************************
+* gclid 集計
+*****************************************/
+s.eVar155 = "";
+var gclid = s.getQueryParam('gclid');
+s.eVar155 = gclid;
+
+/******* ここから下には何も記述しないで下さい ******** /
+/************* DO NOT ALTER ANYTHING BELOW THIS LINE ! **************/
+var s_code=s.t();if(s_code) document.write(s_code)

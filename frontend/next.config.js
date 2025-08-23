@@ -1,0 +1,38 @@
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  reactStrictMode: true,
+  swcMinify: true,
+  images: {
+    unoptimized: true, // This prevents Next.js from trying to optimize images
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate',
+          },
+        ],
+      },
+    ];
+  },
+  env: {
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002',
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `http://gps-trucks-backend:3002/api/:path*`,
+      },
+      {
+        source: '/images/:path*',
+        destination: `http://gps-trucks-backend:3002/images/:path*`,
+      },
+    ];
+  },
+}
+
+module.exports = nextConfig

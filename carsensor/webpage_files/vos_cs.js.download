@@ -1,0 +1,4 @@
+(typeof(getVosQstr)=='undefined')&&(getVosQstr=function(){return ""});
+document.write("<scr"+"ipt type='text/javascript' charset='UTF-8' src='/vos/s_code_cs.js"+getVosQstr('s_code_cs')+"'></scr"+"ipt>");
+document.write("<scr"+"ipt type='text/javascript' charset='UTF-8' src='/vos/code_to_paste_cs.js"+getVosQstr('code_to_paste_cs')+"'></scr"+"ipt>");
+document.write("<scr"+"ipt type='text/javascript' charset='UTF-8' src='/vos/action_request.js"+getVosQstr('action_request')+"'></scr"+"ipt>");

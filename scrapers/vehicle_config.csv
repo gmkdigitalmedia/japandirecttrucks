@@ -1,0 +1,7 @@
+manufacturer,model,carsensor_url,enabled,min_year,max_pages,priority,notes
+Toyota,Land Cruiser 200,https://www.carsensor.net/usedcar/search.php?CARC=TO_S196&AR=1*7&SKIND=1,true,1990,20,1,Popular export model
+Toyota,Land Cruiser 300,https://www.carsensor.net/usedcar/search.php?CARC=TO_S300&AR=1*7&SKIND=1,true,2021,10,2,Newest model
+Toyota,Land Cruiser Prado,https://www.carsensor.net/usedcar/search.php?CARC=TO_S180&AR=1*7&SKIND=1,true,1990,15,3,Mid-size SUV
+Daihatsu,Hijet,https://www.carsensor.net/usedcar/search.php?CARC=DA_S002&AR=1*7&SKIND=1,true,1990,10,4,Small commercial truck
+Toyota,Hilux,https://www.carsensor.net/usedcar/search.php?CARC=TO_S055&AR=1*7&SKIND=1,true,1990,15,5,Pickup truck
+Nissan,Patrol,https://www.carsensor.net/usedcar/search.php?CARC=NI_S055&AR=1*7&SKIND=1,false,1990,10,6,Large SUV - disabled for now

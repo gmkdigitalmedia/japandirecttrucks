@@ -1,0 +1,446 @@
+var bklist = {
+	currentTab: null, // 現在のタブの位置1：物件別一覧、2：購入プラン別一覧
+	init: function() {
+		listLog.setMpLog();
+		this.setChangeSort();
+	},
+	markFav: function(favBkknList) {
+		$(".js_addFavoriteAlready").each(function() {
+			if (this.id.match(/(.*?)_(.*)/)) {
+				var bkcd = RegExp.$1;
+				if ($.inArray(bkcd, favBkknList) >= 0) {
+					$("#" + bkcd + "_fav").show();
+				} else {
+					$("#" + bkcd + "_btn").show();
+				}
+			}
+		});
+	},
+	setChangeSort: function() {
+		$("#js-sortBar a[id^=sort]").click(function() {
+			if ($(this).hasClass("selected")) return false;
+
+			var id = $(this).attr("id");
+			var ary = id.split("_");
+			if (ary.length > 1) {
+				var url = $("#js-sortBar #sort_url").val();
+				if (url.indexOf("?") != -1) {
+					url += (Number(ary[1]) > 0) ? '&SORT=' + ary[1] : '';
+				} else {
+					url += (Number(ary[1]) > 0) ? '?SORT=' + ary[1] : '';
+				}
+				location.href = url;
+			}
+			return false;
+		});
+	},
+	addFavBkn: function(bknCd, routeid, fair) {
+		$("#favPop_msg").fadeOut("fast");
+		$("#" + bknCd + "_btn").removeAttr("onmouseover");
+		$("#" + bknCd + "_btn").removeAttr("onmouseout");
+		if(!Cs_FavUtil.add(bknCd, routeid, fair, bknCd + '_btn', bknCd + '_fav')) return false;
+		var favBkknList = JSON.parse($("#js-favorite").val());
+		if($.inArray(bknCd, favBkknList) != -1) return false;
+		if(favBkknList.length>=30) favBkknList.shift();
+		favBkknList.push(bknCd);
+		$("#js-favorite").val(JSON.stringify(favBkknList));
+		return false;
+	}
+};
+
+var sLock = {
+	win: null,
+	resultBar: null,
+	sortBar: null,
+	top: 0,
+	bottom: 0,
+	barHeigtht: 0,
+	init: function(){
+		this.win = $(window);
+		this.resultBar = $('#js-resultBarFix');
+		this.sortBar = $('#js-sortBar');
+		this.barHeigtht = this.resultBar.height() + this.sortBar.height();
+		if(this.resultBar.length > 0){
+			this.active(this.resultBar);
+		}
+	},
+	active: function(){
+		this.win.on('scroll', function() {
+			sLock.top = $('#js-resultBar').offset().top;
+			sLock.bottom = $(".bottomPagerWrap").offset().top;
+			if (sLock.win.scrollTop() >= sLock.top) {
+				sLock.show();
+				if(sLock.win.scrollTop() + sLock.barHeigtht >= sLock.bottom){
+					sLock.hide();
+				}
+			}else{
+				sLock.hide();
+			}
+		});
+	},
+	show: function(){
+		this.resultBar.addClass('is-active');
+		this.sortBar.addClass('is-active');
+	},
+	hide: function(){
+		this.resultBar.removeClass('is-active');
+		this.sortBar.removeClass('is-active');
+	}
+};
+
+var balloon = {
+	target: null,
+	trigger: null,
+	init: function() {
+		if (Cs_Util.getCookie("favBalloonDisp")) {
+			$('.balloon--favorite').attr('data-balloon', '');
+		}
+		this.target = $('[data-balloon=target]');
+		this.trigger = $('[data-balloon=trigger]');
+		this.show();
+		this.hide();
+	},
+	show: function() {
+		this.trigger.on({
+			'mouseover': function() {
+				$(this).parent().find(balloon.target).addClass('is-active');
+			},
+			'mouseout': function() {
+				$(this).parent().find(balloon.target).removeClass('is-active');
+			}
+		});
+	},
+	hide: function() {
+		this.target.on({
+			'mouseover': function() {
+				$(this).addClass('is-active');
+			},
+			'mouseout': function() {
+				$(this).removeClass('is-active');
+			}
+		});
+	},
+	isDisabledFav: function() {
+		Cs_Util.setCookie("favBalloonDisp", '1');
+		$(".balloon--favorite").removeClass('is-active');
+		this.init();
+		return false;
+	},
+};
+
+var listLog = {
+	setClickLog: function(routeId) {
+		var stid = "CS210610";
+		var id = "search";
+		var ary = [];
+		var cookie_value = listLog.getUUID();
+
+		if (cookie_value !== "") {
+			ary[0] = cookie_value;
+			listLog.outputClickLog(stid, id, ary);
+		}
+	},
+	outputClickLog: function(stid, id, logarry) {
+		var i = 0;
+		var str = "";
+		var aryNum = logarry.length;
+		str = "STID=" + stid + "&ID=" + id + "&LOGNUM=" + aryNum;
+		for (i = 0; i < aryNum; i++) {
+			str += "&ARG" + (i + 1).toString() + "=" + logarry[i];
+		}
+		var req = new XMLHttpRequest();
+		if (req) {
+			req.onreadystatechange = function() {};
+			var reqUrl = "/usedcar/modules/cs_clicklog.php";
+			req.open('POST', reqUrl, true);
+			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			req.send(str);
+		}
+	},
+	setMpLog: function() {
+		if ($("#ROUTEID").val() == "CS211800") return;
+		$("a[class*=js_mpjump_]").click(function() {
+			return listLog.outputMpLog(this.className);
+		});
+	},
+	outputMpLog: function(val) {
+		var param = "";
+		$(val.split(" ")).each(function() {
+			if (this.match(/^js_mpjump_(.*)/)) {
+				param = RegExp.$1;
+				return false;
+			}
+		});
+		if (!param) return;
+		$.ajax({
+			type: "POST",
+			url: "/usedcar/apllog.php",
+			data: param,
+			async: false
+		});
+		return true;
+	},
+	setBannerlog: function(argv) {
+		argv = argv.replace(/^[\s　]/g, "");
+		argv = argv.replace(/[\s　]$/g, "");
+		argv = argv.replace(/[\s　]+/g, " ");
+		if (argv != "") {
+			listLog.outputBannerLog(argv);
+			return true;
+		}
+		return true;
+	},
+	outputBannerLog: function(argv) {
+		var req = null;
+		req = new XMLHttpRequest();
+
+		if (req) {
+			req.onreadystatechange = function() {
+				if (req.readyState == 4) {
+					if (req.responseText) {
+						// ここに取ってきたデータで行いたい処理を記述する。
+					}
+				}
+			};
+			var url = "/usedcar/bannerlog.php";
+			req.open('POST', url, false);
+			req.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+			req.send(argv);
+		}
+	},
+	getUUID: function() {
+		var cookies = document.cookie.split("; ");
+		var cookie_value = "";
+		for (var i = 0; i < cookies.length; i++) {
+			var str = cookies[i].split("=");
+			if (str[0] == "CSUUID" && unescape(str[1]) !== undefined) {
+				cookie_value = unescape(str[1]);
+				break;
+			}
+		}
+		return cookie_value;
+	}
+};
+
+// 非問い合わせ物件表示
+var noInqContents = {
+	prevArrow: '<button type="button" data-role="none" class="slick-prev slick-arrow slick-disabled" aria-label="Previous" tabindex="0" role="button">Previous</button>',
+	nextArrow: '<button type="button" data-role="none" class="slick-next slick-arrow slick-disabled" aria-label="Next" tabindex="0" role="button">Next</button>',
+	init: function(){
+		var $slick = $('.noInqContentsList'),
+			dispArrowBtn = function(){
+				if(!$slick.find('button.slick-arrow').length){
+					// 表示物件数1の場合、ボタン追加されない(optionでどうにもならない)ので手動で追加
+					$(noInqContents.prevArrow).prependTo($slick);
+					$(noInqContents.nextArrow).appendTo($slick);
+				}
+			};
+		if(!$slick.length) return;
+
+		$slick.slick({
+			infinite:false,
+			variableWidth: true,
+		});
+		dispArrowBtn();
+
+		// 削除機能追加
+		$('.js-deleteBkn').on('click', function(){
+			var $slides = $slick.find('.slick-slide'),
+				$target = $(this).closest('.slick-slide'),
+				idx = $slides.index($target),
+				bkncd = $(this).data('bkncd');
+			if(idx < 0) return false;
+
+			if($slides.length == 1){
+				$('.noInqContentsBlock').fadeOut();
+				reqCustomLink("None", "", "PC_NONINQ_DEL_LIST_ALL");
+			} else{
+				$target.fadeOut(function(){
+					if(idx >= $slides.length-1) $slick.slick('slickPrev');
+					$slick.slick('slickRemove', idx);
+					dispArrowBtn();
+				});
+				reqCustomLink("None", "", "PC_NONINQ_DEL_LIST_ITEM");
+			}
+			noInqContents.delNonInqBkns(bkncd);
+		});
+
+		$('.noInqContentsBlock').removeClass('is-hidden');
+		noInqContents.sendLog();
+	},
+	delNonInqBkns:function(bkncd){
+		var cKey = 'PC_NON_INQBKNS',
+			nonInqBkns = Cs_Util.getCookie(cKey);
+		if(!nonInqBkns) return;
+
+		var bkns = nonInqBkns.split('*'),
+			idx = bkns.indexOf(bkncd);
+		if(idx < 0) return;
+		bkns.splice(idx, 1);
+
+		var domainVal = location.host.match(/\.carsensor\.net/) ? ".carsensor.net" : "";
+		var date1 = new Date();
+		date1.setTime(date1.getTime() + 30*24*60*60*1000);
+
+		if(bkns.length >= 1){
+			Cs_Util.setCookie(cKey,bkns.join('*'), date1, '/' , domainVal);
+		} else{
+			Cs_Util.setCookie(cKey,"", -1, '/' , domainVal);
+		}
+	},
+	sendLog: function(){
+		var cnt = $('.noInqContentsList li.noInqContentsList__item').length;
+		reqVosVarPC("eVar106" , cnt);
+	}
+};
+
+(function($) {
+	function Car() {
+		this.initialize.apply(this, arguments);
+	}
+	Car.prototype = {
+		//Constructor
+		initialize: function(arguments) {
+			this.cassetteLink();
+		},
+		cassetteLink: function() {
+			$('.js_listTableCassette').bind('click', function(e) {
+				e.stopPropagation();
+				var target = e.target;
+				var tag = target.tagName.toLowerCase();
+				var pTag = $(target).parent()[0].tagName.toLowerCase();
+				//org
+				var t1 = $(target);
+				var hasCls = t1.hasClass('js_listTableCassette');
+				while (!hasCls) {
+					t1 = t1.parent();
+					hasCls = t1.hasClass('js_listTableCassette');
+				}
+				var bknnum = $(this).data('bknnum');
+				var domainVal = location.host.match(/\.carsensor\.net/) ? ".carsensor.net" : "";
+				Cs_Util.setCookie('CS_LIST_NO', bknnum, null, '/', domainVal)
+				if (tag == "button" || tag == "a") {
+					return true;
+				} else if (pTag == "button" || pTag == "a") {
+					return true;
+				} else {
+					var a = t1.find('a[name="detail_a"]');
+					a[0].onclick && a[0].onclick();
+				}
+				return true;
+			});
+		}
+	};
+	var c = new Car();
+})(jQuery);
+
+$(function() {
+	bklist.init();
+	sLock.init();
+	balloon.init();
+	noInqContents.init();
+});
+
+$("#js-kaitoriBannerClick").click(function() {
+	setKaitoriCookie();
+});
+$("#js-kaitoriBannerClose").click(function() {
+	setKaitoriCookie();
+});
+function setKaitoriCookie() {
+	$("#tm_ftr").css("display", "none");
+	limit = new Date(); 
+	limit.setTime(limit.getTime()+(30*24*60*60*1000));
+	limit = limit.toGMTString();
+	document.cookie = "PC_LIST_KAITORI_BANNER_OFF=1;path=/;expires="+limit;
+};
+
+var customLog = {
+	inVASimilarBukken : function(target){
+		$(target).each(function(){
+			var caset_num = $(this).data("bknnum");
+			var bukken_cd = $(this).data("bkncd");
+			cmn.inViewAction($(this), true, function(){
+				reqCustomLink("None", "", 'pc_list_similarBkn_' + caset_num + '_' + bukken_cd + '_imp');
+			});
+		});			
+	},
+	clickLogSimilarBukken : function(target){
+		$(target).on('click', function(){
+			var caset_num = $(this).data("bknnum");
+			var bukken_cd = $(this).data("bkncd");
+			reqCustomLink("None", "", 'pc_list_similarBkn_' + caset_num + '_' + bukken_cd + '_click');
+		});
+	},
+	bukkenCountLog : function(normalBknCount, relBknCount){
+		if(normalBknCount > 0){
+			reqCustomLink("None", "", 'pc_list_similarBknCnt_' + normalBknCount + '_' + relBknCount);
+		}
+	}
+}
+$(window).on('load', 
+function() {
+	customLog.inVASimilarBukken($('.js-similarCas'));
+	customLog.clickLogSimilarBukken($('.js-similarCas'));
+	customLog.bukkenCountLog($('.js-mainCassette').length, $('.js-similarCas').length);
+});
+
+$(function() {
+	cmn.inViewAction($('.js-carReview'), true, function(){
+		reqCustomLink("None", "", "pc_list_carReviewArea_imp");
+	});
+
+	$('.js-carReviewGoodContents').on('click',function(){
+		reqCustomLink("None", "", 'pc_list_carReview_good_click');
+	});
+
+	$('.js-carReviewBadContents').on('click',function(){
+		reqCustomLink("None", "", 'pc_list_carReview_bad_click');
+	});
+
+	$('.js-carReviewList').on('click',function(){
+		reqCustomLink("None", "", 'pc_list_carReviewList_click');
+	});
+});
+
+$(function() {
+	cmn.inViewAction($('.js-footerRelatedLinks'), true, function(){
+		reqCustomLink("None", "", "pc_relatedBodyLinks_view");
+	});
+	$('.js-footerRelatedLink').on('click',function(){
+		reqCustomLink("None", "", 'pc_relatedBodyLinks_click');
+	});
+	cmn.inViewAction($('.js-footerMakerLinks'), true, function(){
+		reqCustomLink("None", "", "pc_relatedMakerLinks_view");
+	});
+	$('.js-footerMakerLink').on('click',function(){
+		reqCustomLink("None", "", "pc_relatedMakerLinks_click");
+	});
+
+});
+
+$("img[data-shopImage]").Lazy({
+	attribute: 'data-shopImage',
+	effect: 'fadeIn',
+	effectTime: 500,
+	onError: function(elm){
+		$(elm).attr("src", "/CSphoto/cat/nophoto_M.png");
+	}
+});
+
+$(function() {
+	cmn.inViewAction($('.js-shopContentsReview'), true, function(){
+		reqCustomLink("None", "", "pc_list_shopData_review_inview");
+	});
+	cmn.inViewAction($('.js-shopContentsPickup'), true, function(){
+		reqCustomLink("None", "", "pc_list_shopData_shop_inview");
+	});
+	cmn.inViewAction($('.js-shopContentsList'), true, function(){
+		reqCustomLink("None", "", "pc_list_shopData_manyRevs_inview");
+	});
+
+	$('.js-shopContents').on('click',function(){
+		var contentsName = $(this).data("shopcontentsname");
+		reqCustomLink("None", "", "pc_list_shopData_" + contentsName + "_click");
+	});
+});

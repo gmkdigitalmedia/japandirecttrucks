@@ -1,0 +1,12 @@
+(typeof(getVosQstr)=='undefined')&&(getVosQstr=function(){return ""});
+var _vos_host = 'www.carsensor.net';
+var _vos_js=function() {
+  var host=location.host;
+  var smph=navigator.userAgent.match(/iPhone|Android|Tizen/);
+  if(host.match(/ducar\.carsensor\.net/)) return '/vos/vos_ducar.js';
+  if(host!=_vos_host) return (!smph) ? '/vos/vos_other.js' : '/vos/vos_other_smph.js';
+  return (!smph) ? '/vos/vos_cs.js' : '/vos/vos_smph.js';
+}();
+
+_vos_js += getVosQstr(_vos_js.split('/').pop().split('.').shift());
+document.write( '<scr'+'ipt type="text/javascript" charset="UTF-8" src="' + location.protocol + "//" + _vos_host + _vos_js + '"></scr'+'ipt>' );

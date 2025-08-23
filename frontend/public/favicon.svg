@@ -1,0 +1,21 @@
+<svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="16" fill="#0369a1"/>
+  
+  <!-- GPS text -->
+  <text x="16" y="20" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="white" text-anchor="middle">GPS</text>
+  
+  <!-- Simple truck icon -->
+  <g transform="translate(7, 4)">
+    <!-- Truck body -->
+    <rect x="0" y="6" width="12" height="6" fill="white" rx="1"/>
+    <!-- Truck cab -->
+    <rect x="9" y="3" width="6" height="9" fill="white" rx="1"/>
+    <!-- Front wheel -->
+    <circle cx="12" cy="14" r="2" fill="#f3f4f6"/>
+    <!-- Rear wheel -->
+    <circle cx="4" cy="14" r="2" fill="#f3f4f6"/>
+    <!-- Front grille -->
+    <rect x="14" y="5" width="1" height="4" fill="#d1d5db"/>
+  </g>
+</svg>

@@ -1,0 +1,24 @@
+manufacturer,model,carsensor_url,page2_url,enabled,min_year,max_pages,priority,notes
+Toyota,Land Cruiser 70 Pickup,https://www.carsensor.net/usedcar/index.html?STID=CS210610&AR=1*7&BRDC=&CARC=TO_S233&NINTEI=&CSHOSHO=,https://www.carsensor.net/usedcar/bTO/s233/index2.html?AR=1%2A7,true,1990,10,5,Pickup variant
+Toyota,Land Cruiser 70,https://www.carsensor.net/usedcar/bTO/s149/index.html,https://www.carsensor.net/usedcar/bTO/s149/index2.html,true,1990,15,6,Classic off-road
+Toyota,Megacruiser,https://www.carsensor.net/usedcar/index.html?STID=CS210610&AR=0&BRDC=&CARC=TO_S138&NINTEI=&CSHOSHO=,,true,1996,5,7,Rare military-style SUV
+Toyota,Land Cruiser 100,https://www.carsensor.net/usedcar/bTO/s150/index.html,https://www.carsensor.net/usedcar/bTO/s150/index2.html,true,1998,15,9,Classic full-size SUV
+Toyota,Land Cruiser 60,https://www.carsensor.net/usedcar/index.html?STID=CS210610&AR=1*7&BRDC=&CARC=TO_S193&NINTEI=&CSHOSHO=,,true,1980,5,10,Vintage Land Cruiser
+Toyota,Hilux Surf,https://www.carsensor.net/usedcar/bTO/s113/index.html,https://www.carsensor.net/usedcar/bTO/s113/index2.html,true,1984,10,11,4Runner equivalent
+Toyota,FJ Cruiser,https://www.carsensor.net/usedcar/bTO/s219/index.html,https://www.carsensor.net/usedcar/bTO/s219/index2.html,true,2006,10,12,Retro SUV
+Nissan,Elgrand,https://www.carsensor.net/usedcar/bNI/s019/index.html,https://www.carsensor.net/usedcar/bNI/s019/index2.html,true,1997,10,1,Large MPV
+Nissan,X-Trail,https://www.carsensor.net/usedcar/bNI/s020/index.html,https://www.carsensor.net/usedcar/bNI/s020/index2.html,true,2000,10,2,Compact SUV
+Toyota,Vellfire,https://www.carsensor.net/usedcar/bTO/s200/index.html,https://www.carsensor.net/usedcar/bTO/s200/index2.html,true,2008,10,8,Luxury MPV
+Toyota,Land Cruiser Prado,https://www.carsensor.net/usedcar/bTO/s152/index.html,https://www.carsensor.net/usedcar/bTO/s152/index2.html?AR=1%2A7,true,1990,15,4,Mid-size SUV
+Toyota,Land Cruiser 200,https://www.carsensor.net/usedcar/search.php?CARC=TO_S196&AR=1*7&SKIND=1,https://www.carsensor.net/usedcar/bTO/s196/index2.html?AR=1%2A7,true,1990,20,3,Popular export model - disabled for now
+Toyota,Land Cruiser 300,https://www.carsensor.net/usedcar/bTO/s253/index.html,https://www.carsensor.net/usedcar/bTO/s253/index2.html,true,2021,15,2,Latest generation SUV
+Daihatsu,HiJet,https://www.carsensor.net/usedcar/bDA/s042/kanto/index.html,https://www.carsensor.net/usedcar/bDA/s042/kanto/index2.html,true,1990,10,13,Compact pickup truck
+Honda,HR-V,https://www.carsensor.net/usedcar/search.php?CARC=HO_S040&AR=1&SKIND=1,,true,1990,10,14,Compact SUV
+Honda,Elysium,https://www.carsensor.net/usedcar/bHO/index.html?CARC=HO_S040%2AHO_S016&AR=1%2A7,https://www.carsensor.net/usedcar/bHO/index2.html?CARC=HO_S040%2AHO_S016&AR=1%2A7,true,1990,10,15,Luxury MPV
+Porsche,Cayenne,https://www.carsensor.net/usedcar/bPO/s008/index.html?AR=1%2A7,https://www.carsensor.net/usedcar/bPO/s008/index2.html?AR=1%2A7,true,1990,10,16,Luxury SUV
+Subaru,STI,https://www.carsensor.net/usedcar/bSB/s004/index.html?AR=1%2A7,https://www.carsensor.net/usedcar/bSB/s004/index2.html?AR=1%2A7,true,1990,10,17,Performance sedan
+Mitsubishi,Delica Star Wagon,https://www.carsensor.net/usedcar/index.html?STID=CS210610&AR=1*7&BRDC=&CARC=MI_S049&NINTEI=&CSHOSHO=,,true,1990,10,18,Classic van
+Mitsubishi,Pajero,https://www.carsensor.net/usedcar/bMI/s012/index.html?AR=1%2A7,https://www.carsensor.net/usedcar/bMI/s012/index2.html?AR=1%2A7,true,1990,10,19,Off-road SUV
+Mitsubishi,Triton,https://www.carsensor.net/usedcar/bMI/s088/index.html?AR=1%2A7,https://www.carsensor.net/usedcar/bMI/s088/index2.html?AR=1%2A7,true,1990,10,20,Pickup truck
+Suzuki,Sambar Open Deck,https://www.carsensor.net/usedcar/index.html?STID=CS210610&AR=1&BRDC=&CARC=SB_S050&NINTEI=&CSHOSHO=,,true,1990,10,21,Compact truck
+Suzuki,Exiga,https://www.carsensor.net/usedcar/bSB/s038/index.html?AR=1%2A4,https://www.carsensor.net/usedcar/bSB/s038/index2.html?AR=1%2A4,true,1990,10,22,7-seater wagon

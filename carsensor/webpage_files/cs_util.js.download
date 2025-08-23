@@ -1,0 +1,68 @@
+var Cs_Util =
+{
+	/**
+	 * Cookieが有効かどうか
+	 */
+	enableCookie : function() {
+		var name = "isCookie";
+		var result = false;
+
+		Cs_Util.setCookie(name, 1);
+		var value = Cs_Util.getCookie(name);
+		if(value == 1){
+			result = true;
+			Cs_Util.setCookie(name, "", -1);
+		}
+		return result;
+	},
+
+	/**
+	 * Cookie設定
+	 * ※有効期限（expires)はミリ秒指定(指定したい秒数に1000を乗算する)
+	 */
+	setCookie : function(name, value, expires, path, domain, secure) {
+		if(!name){
+			return;
+		}
+
+		var exp = "";
+		if(expires){
+			exp = new Date();
+			exp.setTime(exp.getTime() + expires);
+		}
+
+		var string = name + "=" + escape(value) +
+					((exp)    ? "; expires=" + exp.toGMTString() : "") +
+					"; path=" + ((path) ? path : "/") +
+					((domain) ? "; domain=" + domain : "") +
+					((secure) ? "; secure" : "");
+
+		document.cookie = string;
+	},
+
+	/**
+	 * Cookie取得
+	 */
+	getCookie : function(name) {
+		if(!name){
+			return null;
+		}
+
+		var idx = document.cookie.indexOf(name + "=");
+		if(idx == -1){
+			return null;
+		}
+
+		var value = document.cookie.substring(idx + name.length + 1);
+
+		var end = value.indexOf(";");
+		if(end == -1){
+			end = value.length;
+		}
+
+		value = value.substring(0, end);
+		value = unescape(value);
+
+		return value;
+	}
+};
