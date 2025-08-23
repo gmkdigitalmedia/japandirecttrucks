@@ -135,6 +135,12 @@ export default function SearchFilters({
               placeholder="Land Cruiser, Hilux, etc..."
               value={localFilters.query || ''}
               onChange={(e) => handleFilterChange('query', e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleApplyFilters();
+                }
+              }}
             />
           </div>
 

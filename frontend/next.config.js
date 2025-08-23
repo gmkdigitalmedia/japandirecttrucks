@@ -22,14 +22,16 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002',
   },
   async rewrites() {
+    const backendHost = 'gps-trucks-backend:3002';
+    
     return [
       {
         source: '/api/:path*',
-        destination: `http://gps-trucks-backend:3002/api/:path*`,
+        destination: `http://${backendHost}/api/:path*`,
       },
       {
         source: '/images/:path*',
-        destination: `http://gps-trucks-backend:3002/images/:path*`,
+        destination: `http://${backendHost}/images/:path*`,
       },
     ];
   },

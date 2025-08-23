@@ -23,6 +23,7 @@ import asyncpg
 from datetime import datetime
 import re
 from translator import VehicleTranslator
+from title_cleaner import clean_title
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -491,9 +492,12 @@ class UniversalCarSensorScraper:
                 if manufacturer_name not in english_title and model_name not in english_title:
                     english_title = f"{manufacturer_name} {model_name} {english_title}"
                 
-                vehicle["title_description"] = english_title[:500] if len(english_title) > 500 else english_title
+                # Clean the title using title_cleaner (handles translation and standardization)
+                cleaned_title = clean_title(english_title)
+                vehicle["title_description"] = cleaned_title[:500] if len(cleaned_title) > 500 else cleaned_title
             else:
-                vehicle["title_description"] = f"{manufacturer_name} {model_name}"
+                fallback_title = f"{manufacturer_name} {model_name}"
+                vehicle["title_description"] = clean_title(fallback_title)
 
             # Parse price
             price_main_elem = vehicle_div.select_one(".totalPrice__mainPriceNum")

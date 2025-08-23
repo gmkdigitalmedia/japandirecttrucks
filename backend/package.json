@@ -12,6 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@vitalets/google-translate-api": "^9.2.1",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",

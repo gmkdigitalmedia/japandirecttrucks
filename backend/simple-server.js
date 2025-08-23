@@ -209,17 +209,12 @@ app.get('/api/vehicles/featured', async (req, res) => {
   }
 });
 
-// Main vehicles endpoint - GET all vehicles with pagination and filtering
-app.get('/api/vehicles', async (req, res) => {
-  try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = Math.min(parseInt(req.query.limit) || 10, 50); // Max 50 per page
-    const offset = (page - 1) * limit;
-    
-    // Extract filter parameters
-    const { manufacturer, model, q: searchQuery } = req.query;
-    
-    // Build WHERE conditions
+// Progressive fallback search function
+async function performProgressiveSearch(searchQuery, manufacturer, model, page = 1, limit = 10) {
+  const offset = (page - 1) * limit;
+  
+  // Level 1: Enhanced search (existing logic)
+  const tryEnhancedSearch = async () => {
     let whereConditions = ['v.is_available = TRUE'];
     let queryParams = [];
     let paramIndex = 1;
@@ -238,51 +233,221 @@ app.get('/api/vehicles', async (req, res) => {
       paramIndex++;
     }
     
-    // Add search query filter
+    // Add search query filter with enhanced matching
     if (searchQuery) {
-      whereConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
-      queryParams.push(`%${searchQuery}%`);
+      const searchTerm = searchQuery.toLowerCase().trim();
+      
+      // Handle common Land Cruiser variations
+      let enhancedSearchConditions = [];
+      let enhancedParams = [];
+      
+      // Base search - original query
+      enhancedSearchConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+      enhancedParams.push(`%${searchQuery}%`);
       paramIndex++;
+      
+      // Enhanced search for Land Cruiser variations
+      if (searchTerm.includes('landcruiser') || searchTerm === 'landcruiser') {
+        enhancedSearchConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+        enhancedParams.push(`%land cruiser%`);
+        paramIndex++;
+      }
+      
+      // If search contains 'land' but not 'cruiser', include Land Cruiser matches
+      if (searchTerm.includes('land') && !searchTerm.includes('cruiser')) {
+        enhancedSearchConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+        enhancedParams.push(`%land cruiser%`);
+        paramIndex++;
+      }
+      
+      // Handle model numbers (70, 100, 200, 300) with Land Cruiser context
+      const modelNumbers = searchTerm.match(/\b(70|100|200|300)\b/g);
+      if (modelNumbers) {
+        for (const modelNum of modelNumbers) {
+          enhancedSearchConditions.push(`(v.title_description ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+          enhancedParams.push(`%land cruiser ${modelNum}%`);
+          paramIndex++;
+          
+          // Also match without space (Land Cruiser200, etc.)
+          enhancedSearchConditions.push(`(v.title_description ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+          enhancedParams.push(`%land cruiser${modelNum}%`);
+          paramIndex++;
+        }
+      }
+      
+      // Combine all enhanced search conditions with OR
+      whereConditions.push(`(${enhancedSearchConditions.join(' OR ')})`);
+      queryParams.push(...enhancedParams);
     }
     
-    const whereClause = whereConditions.join(' AND ');
+    return { whereConditions, queryParams, paramIndex };
+  };
+  
+  // Level 2: Partial word search (if enhanced search fails)
+  const tryPartialSearch = async () => {
+    let whereConditions = ['v.is_available = TRUE'];
+    let queryParams = [];
+    let paramIndex = 1;
     
-    const countQuery = `
-      SELECT COUNT(*) as total
-      FROM vehicles v
-      LEFT JOIN manufacturers m ON v.manufacturer_id = m.id
-      LEFT JOIN models md ON v.model_id = md.id
-      WHERE ${whereClause}
-    `;
+    if (searchQuery) {
+      const searchTerm = searchQuery.toLowerCase().trim();
+      const words = searchTerm.split(/\s+/).filter(word => word.length >= 2);
+      
+      if (words.length > 0) {
+        const partialConditions = [];
+        for (const word of words) {
+          partialConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+          queryParams.push(`%${word}%`);
+          paramIndex++;
+        }
+        whereConditions.push(`(${partialConditions.join(' OR ')})`);
+      }
+    }
     
-    const vehiclesQuery = `
-      SELECT DISTINCT ON (v.id)
-        v.*,
-        m.name as manufacturer_name,
-        md.name as model_name,
-        vi.local_path as primary_image_path,
-        vi.original_url as primary_image_url
-      FROM vehicles v
-      LEFT JOIN manufacturers m ON v.manufacturer_id = m.id
-      LEFT JOIN models md ON v.model_id = md.id
-      LEFT JOIN vehicle_images vi ON v.id = vi.vehicle_id AND vi.is_primary = TRUE
-      WHERE ${whereClause}
-      ORDER BY v.id, v.created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
+    return { whereConditions, queryParams, paramIndex };
+  };
+  
+  // Level 3: Single character matching (if partial search fails)  
+  const trySingleCharSearch = async () => {
+    let whereConditions = ['v.is_available = TRUE'];
+    let queryParams = [];
+    let paramIndex = 1;
     
-    // Add pagination parameters
-    queryParams.push(limit, offset);
+    if (searchQuery) {
+      const searchTerm = searchQuery.toLowerCase().trim().replace(/[^a-zA-Z0-9]/g, '');
+      if (searchTerm.length >= 1) {
+        // Try to match any single character or number
+        const chars = searchTerm.split('').filter(char => char.match(/[a-zA-Z0-9]/));
+        if (chars.length > 0) {
+          const charConditions = [];
+          for (const char of chars.slice(0, 3)) { // Limit to first 3 chars to avoid too broad search
+            charConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+            queryParams.push(`%${char}%`);
+            paramIndex++;
+          }
+          whereConditions.push(`(${charConditions.join(' OR ')})`);
+        }
+      }
+    }
     
-    const [countResult, vehiclesResult] = await Promise.all([
-      pool.query(countQuery, queryParams.slice(0, -2)), // Count query doesn't need limit/offset
-      pool.query(vehiclesQuery, queryParams)
-    ]);
+    return { whereConditions, queryParams, paramIndex };
+  };
+  
+  // Level 4: Popular manufacturers/models fallback
+  const tryPopularFallback = async () => {
+    const whereConditions = [
+      'v.is_available = TRUE',
+      `(m.name IN ('Toyota', 'Honda', 'Nissan', 'Mazda', 'Subaru') OR md.name ILIKE '%cruiser%' OR md.name ILIKE '%hilux%')`
+    ];
+    const queryParams = [];
+    const paramIndex = 1;
     
-    const total = parseInt(countResult.rows[0].total);
-    const totalPages = Math.ceil(total / limit);
+    return { whereConditions, queryParams, paramIndex };
+  };
+  
+  // Level 5: Featured vehicles fallback
+  const tryFeaturedFallback = async () => {
+    const whereConditions = ['v.is_available = TRUE', 'v.is_featured = TRUE'];
+    const queryParams = [];
+    const paramIndex = 1;
     
-    const vehicles = vehiclesResult.rows.map(row => ({
+    return { whereConditions, queryParams, paramIndex };
+  };
+  
+  // Level 6: Any available vehicles (absolute fallback)
+  const tryAnyVehicles = async () => {
+    const whereConditions = ['v.is_available = TRUE'];
+    const queryParams = [];
+    const paramIndex = 1;
+    
+    return { whereConditions, queryParams, paramIndex };
+  };
+  
+  // Try each search level progressively
+  const searchLevels = [
+    { name: 'Enhanced Search', func: tryEnhancedSearch },
+    { name: 'Partial Word Search', func: tryPartialSearch },
+    { name: 'Character Match Search', func: trySingleCharSearch },
+    { name: 'Popular Models Fallback', func: tryPopularFallback },
+    { name: 'Featured Vehicles Fallback', func: tryFeaturedFallback },
+    { name: 'Any Available Vehicles', func: tryAnyVehicles }
+  ];
+  
+  for (const level of searchLevels) {
+    try {
+      const { whereConditions, queryParams, paramIndex } = await level.func();
+      const whereClause = whereConditions.join(' AND ');
+      
+      // Count query
+      const countQuery = `
+        SELECT COUNT(*) as total
+        FROM vehicles v
+        LEFT JOIN manufacturers m ON v.manufacturer_id = m.id
+        LEFT JOIN models md ON v.model_id = md.id
+        WHERE ${whereClause}
+      `;
+      
+      const countResult = await pool.query(countQuery, queryParams);
+      const total = parseInt(countResult.rows[0].total);
+      
+      if (total > 0) {
+        // Found results, get the vehicles
+        const vehiclesQuery = `
+          SELECT DISTINCT ON (v.id)
+            v.*,
+            m.name as manufacturer_name,
+            md.name as model_name,
+            vi.local_path as primary_image_path,
+            vi.original_url as primary_image_url
+          FROM vehicles v
+          LEFT JOIN manufacturers m ON v.manufacturer_id = m.id
+          LEFT JOIN models md ON v.model_id = md.id
+          LEFT JOIN vehicle_images vi ON v.id = vi.vehicle_id AND vi.is_primary = TRUE
+          WHERE ${whereClause}
+          ORDER BY v.id, v.created_at DESC
+          LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+        `;
+        
+        const allParams = [...queryParams, limit, offset];
+        const vehiclesResult = await pool.query(vehiclesQuery, allParams);
+        
+        console.log(`Search succeeded at level: ${level.name}, found ${total} results for query: "${searchQuery}"`);
+        
+        return {
+          total,
+          vehicles: vehiclesResult.rows,
+          searchLevel: level.name
+        };
+      }
+    } catch (error) {
+      console.error(`Search level ${level.name} failed:`, error);
+      continue; // Try next level
+    }
+  }
+  
+  // This should never happen, but just in case
+  return {
+    total: 0,
+    vehicles: [],
+    searchLevel: 'No Results'
+  };
+}
+
+// Main vehicles endpoint - GET all vehicles with pagination and filtering
+app.get('/api/vehicles', async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 10, 50); // Max 50 per page
+    
+    // Extract filter parameters
+    const { manufacturer, model, q: searchQuery } = req.query;
+    
+    // Use progressive search
+    const searchResult = await performProgressiveSearch(searchQuery, manufacturer, model, page, limit);
+    
+    const totalPages = Math.ceil(searchResult.total / limit);
+    
+    const vehicles = searchResult.vehicles.map(row => ({
       id: row.id,
       title_description: row.title_description,
       price_vehicle_yen: row.price_vehicle_yen,
@@ -299,9 +464,7 @@ app.get('/api/vehicles', async (req, res) => {
     }));
     
     // Log for debugging
-    if (manufacturer || model || searchQuery) {
-      console.log(`Filtered vehicles query: manufacturer="${manufacturer}", model="${model}", search="${searchQuery}", found ${total} results`);
-    }
+    console.log(`Search completed: manufacturer="${manufacturer}", model="${model}", search="${searchQuery}", level="${searchResult.searchLevel}", found ${searchResult.total} results`);
     
     res.json({
       success: true,
@@ -309,10 +472,14 @@ app.get('/api/vehicles', async (req, res) => {
       pagination: {
         page,
         limit,
-        total,
+        total: searchResult.total,
         totalPages,
         hasNext: page < totalPages,
         hasPrev: page > 1
+      },
+      meta: {
+        searchLevel: searchResult.searchLevel,
+        originalQuery: searchQuery
       }
     });
   } catch (error) {
@@ -360,95 +527,174 @@ app.post('/api/vehicles/search', async (req, res) => {
       maxMileage
     } = params;
     
-    console.log('Sort params:', { sortBy, sortOrder });
-    let whereConditions = ['v.is_available = TRUE'];
-    let queryParams = [];
-    let paramIndex = 1;
+    // Use progressive search but with additional filters for price, year, etc.
+    const searchResult = await performProgressiveSearch(query, manufacturer, model, page, limit);
     
-    // Add manufacturer filter
-    if (manufacturer) {
-      whereConditions.push(`m.name = $${paramIndex}`);
-      queryParams.push(manufacturer);
-      paramIndex++;
+    // If we have additional filters and got results, we need to apply them
+    if (searchResult.total > 0 && (minPrice || maxPrice || minYear || maxYear || maxMileage)) {
+      // Apply additional filters to the base query
+      let additionalWhereConditions = ['v.is_available = TRUE'];
+      let additionalParams = [];
+      let paramIndex = 1;
+      
+      // Re-apply search conditions from the successful search level
+      if (query) {
+        // This is a simplified version - in a production system you'd want to reconstruct the exact search
+        additionalWhereConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
+        additionalParams.push(`%${query}%`);
+        paramIndex++;
+      }
+      
+      if (manufacturer) {
+        additionalWhereConditions.push(`m.name = $${paramIndex}`);
+        additionalParams.push(manufacturer);
+        paramIndex++;
+      }
+      
+      if (model) {
+        additionalWhereConditions.push(`md.name = $${paramIndex}`);
+        additionalParams.push(model);
+        paramIndex++;
+      }
+      
+      // Add price filters
+      if (minPrice) {
+        additionalWhereConditions.push(`v.price_total_yen >= $${paramIndex}`);
+        additionalParams.push(minPrice);
+        paramIndex++;
+      }
+      
+      if (maxPrice) {
+        additionalWhereConditions.push(`v.price_total_yen <= $${paramIndex}`);
+        additionalParams.push(maxPrice);
+        paramIndex++;
+      }
+      
+      // Add year filters
+      if (minYear) {
+        additionalWhereConditions.push(`v.model_year_ad >= $${paramIndex}`);
+        additionalParams.push(minYear);
+        paramIndex++;
+      }
+      
+      if (maxYear) {
+        additionalWhereConditions.push(`v.model_year_ad <= $${paramIndex}`);
+        additionalParams.push(maxYear);
+        paramIndex++;
+      }
+      
+      // Add mileage filter
+      if (maxMileage) {
+        additionalWhereConditions.push(`v.mileage_km <= $${paramIndex}`);
+        additionalParams.push(maxMileage);
+        paramIndex++;
+      }
+      
+      const whereClause = additionalWhereConditions.join(' AND ');
+      
+      const searchQuery = `
+        WITH sorted_vehicles AS (
+          SELECT 
+            v.*,
+            m.name as manufacturer_name,
+            md.name as model_name,
+            vi.original_url as primary_image_url,
+            COUNT(*) OVER() as total_count
+          FROM vehicles v
+          LEFT JOIN manufacturers m ON v.manufacturer_id = m.id
+          LEFT JOIN models md ON v.model_id = md.id
+          LEFT JOIN vehicle_images vi ON v.id = vi.vehicle_id AND vi.is_primary = TRUE
+          WHERE ${whereClause}
+          ORDER BY v.${sortBy} ${sortOrder}, v.id
+        )
+        SELECT * FROM sorted_vehicles
+        LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
+      `;
+      
+      const offset = (page - 1) * limit;
+      additionalParams.push(limit, offset);
+      
+      const result = await pool.query(searchQuery, additionalParams);
+      
+      const total = result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
+      
+      // If filtered results are empty, fall back to progressive search without extra filters
+      if (total === 0) {
+        console.log('Filtered search returned no results, falling back to progressive search');
+        const vehicles = searchResult.vehicles.map(row => ({
+          id: row.id,
+          title_description: row.title_description,
+          price_total_yen: row.price_total_yen,
+          price_vehicle_yen: row.price_vehicle_yen,
+          model_year_ad: row.model_year_ad,
+          mileage_km: row.mileage_km,
+          location_prefecture: row.location_prefecture,
+          manufacturer: row.manufacturer_name ? { name: row.manufacturer_name } : null,
+          model: row.model_name ? { name: row.model_name } : null,
+          source_url: row.source_url,
+          is_available: row.is_available,
+          created_at: row.created_at,
+          primary_image: row.primary_image_url || null
+        }));
+        
+        const totalPages = Math.ceil(searchResult.total / limit);
+        
+        return res.json({
+          success: true,
+          data: {
+            data: vehicles,
+            total: searchResult.total,
+            page,
+            totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1
+          },
+          meta: {
+            searchLevel: searchResult.searchLevel + ' (Filter Fallback)',
+            originalQuery: query,
+            note: 'Filters removed to show results'
+          }
+        });
+      }
+      
+      // Use filtered results
+      const vehicles = result.rows.map(row => ({
+        id: row.id,
+        title_description: row.title_description,
+        price_total_yen: row.price_total_yen,
+        price_vehicle_yen: row.price_vehicle_yen,
+        model_year_ad: row.model_year_ad,
+        mileage_km: row.mileage_km,
+        location_prefecture: row.location_prefecture,
+        manufacturer: row.manufacturer_name ? { name: row.manufacturer_name } : null,
+        model: row.model_name ? { name: row.model_name } : null,
+        source_url: row.source_url,
+        is_available: row.is_available,
+        created_at: row.created_at,
+        primary_image: row.primary_image_url || null
+      }));
+      
+      const totalPages = Math.ceil(total / limit);
+      
+      return res.json({
+        success: true,
+        data: {
+          data: vehicles,
+          total,
+          page,
+          totalPages,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        },
+        meta: {
+          searchLevel: searchResult.searchLevel + ' (Filtered)',
+          originalQuery: query
+        }
+      });
     }
     
-    // Add model filter
-    if (model) {
-      whereConditions.push(`md.name = $${paramIndex}`);
-      queryParams.push(model);
-      paramIndex++;
-    }
-    
-    // Add search query filter
-    if (query) {
-      whereConditions.push(`(v.title_description ILIKE $${paramIndex} OR m.name ILIKE $${paramIndex} OR md.name ILIKE $${paramIndex})`);
-      queryParams.push(`%${query}%`);
-      paramIndex++;
-    }
-    
-    // Add price filters
-    if (minPrice) {
-      whereConditions.push(`v.price_total_yen >= $${paramIndex}`);
-      queryParams.push(minPrice);
-      paramIndex++;
-    }
-    
-    if (maxPrice) {
-      whereConditions.push(`v.price_total_yen <= $${paramIndex}`);
-      queryParams.push(maxPrice);
-      paramIndex++;
-    }
-    
-    // Add year filters
-    if (minYear) {
-      whereConditions.push(`v.model_year_ad >= $${paramIndex}`);
-      queryParams.push(minYear);
-      paramIndex++;
-    }
-    
-    if (maxYear) {
-      whereConditions.push(`v.model_year_ad <= $${paramIndex}`);
-      queryParams.push(maxYear);
-      paramIndex++;
-    }
-    
-    // Add mileage filter
-    if (maxMileage) {
-      whereConditions.push(`v.mileage_km <= $${paramIndex}`);
-      queryParams.push(maxMileage);
-      paramIndex++;
-    }
-    
-    const whereClause = whereConditions.join(' AND ');
-    
-    const searchQuery = `
-      WITH sorted_vehicles AS (
-        SELECT 
-          v.*,
-          m.name as manufacturer_name,
-          md.name as model_name,
-          vi.original_url as primary_image_url,
-          COUNT(*) OVER() as total_count
-        FROM vehicles v
-        LEFT JOIN manufacturers m ON v.manufacturer_id = m.id
-        LEFT JOIN models md ON v.model_id = md.id
-        LEFT JOIN vehicle_images vi ON v.id = vi.vehicle_id AND vi.is_primary = TRUE
-        WHERE ${whereClause}
-        ORDER BY v.${sortBy} ${sortOrder}, v.id
-      )
-      SELECT * FROM sorted_vehicles
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-    
-    const offset = (page - 1) * limit;
-    queryParams.push(limit, offset);
-    
-    const result = await pool.query(searchQuery, queryParams);
-    
-    const total = result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0;
-    const totalPages = Math.ceil(total / limit);
-    
-    const vehicles = result.rows.map(row => ({
+    // No additional filters or progressive search returned no results, use progressive search result
+    const vehicles = searchResult.vehicles.map(row => ({
       id: row.id,
       title_description: row.title_description,
       price_total_yen: row.price_total_yen,
@@ -464,15 +710,21 @@ app.post('/api/vehicles/search', async (req, res) => {
       primary_image: row.primary_image_url || null
     }));
     
+    const totalPages = Math.ceil(searchResult.total / limit);
+    
     res.json({
       success: true,
       data: {
         data: vehicles,
-        total,
+        total: searchResult.total,
         page,
         totalPages,
         hasNext: page < totalPages,
         hasPrev: page > 1
+      },
+      meta: {
+        searchLevel: searchResult.searchLevel,
+        originalQuery: query
       }
     });
   } catch (error) {
@@ -983,6 +1235,62 @@ pool.query(`
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
+
+// Translation function for vehicle titles
+async function translateAndCleanTitle(originalTitle) {
+  try {
+    // First check if translation is needed (contains Japanese characters)
+    if (!/[ぁ-んァ-ヶー]/.test(originalTitle)) {
+      // No Japanese characters, just clean up common issues
+      return cleanupTitle(originalTitle);
+    }
+
+    // Import translate function dynamically
+    const { translate } = require('@vitalets/google-translate-api');
+    
+    // Translate from Japanese to English
+    const translated = await translate(originalTitle, {from: 'ja', to: 'en'});
+    
+    return cleanupTitle(translated.text);
+  } catch (error) {
+    console.error('Translation failed:', error);
+    // If translation fails, just clean up the original title
+    return cleanupTitle(originalTitle);
+  }
+}
+
+// Clean up vehicle titles (common fixes)
+function cleanupTitle(text) {
+  return text
+    .replace(/Land Cruiser Prado/gi, 'Landcruiser Prado')
+    .replace(/LandcruiserPrado/gi, 'Landcruiser Prado')
+    .replace(/Land CruiserPrado/gi, 'Landcruiser Prado')
+    .replace(/CruiserPrado/gi, 'cruiser Prado')
+    .replace(/Land Cruiser/gi, 'Landcruiser')
+    .replace(/hilux surf/gi, 'Hilux Surf')
+    .replace(/FJ Cruiser/gi, 'FJ Cruiser')
+    .replace(/Electric sliding door on both sides/gi, 'Dual Electric Sliding Doors')
+    .replace(/Both sides electric/gi, 'Dual Electric')
+    .replace(/Both sides power slide/gi, 'Dual Power Sliding')
+    .replace(/Rear seat monitor/gi, 'Rear Seat Monitor')
+    .replace(/Around view monitor/gi, 'Around View Monitor')
+    .replace(/Half leather seat/gi, 'Half Leather Seats')
+    .replace(/Sun Roof/gi, 'Sunroof')
+    .replace(/Back camera/gi, 'Backup Camera')
+    .replace(/Air conditioner/gi, 'Air Conditioning')
+    .replace(/Intelligent key/gi, 'Smart Key')
+    .replace(/Corner sensor/gi, 'Corner Sensors')
+    .replace(/Drive recorder/gi, 'Dash Cam')
+    .replace(/One owner car/gi, 'One Owner')
+    .replace(/Non smoking/gi, 'Non-Smoking')
+    .replace(/Leather winding steering wheel/gi, 'Leather Steering Wheel')
+    .replace(/Electric storage mirror/gi, 'Electric Folding Mirrors')
+    .replace(/Full flat seat/gi, 'Full Flat Seats')
+    .replace(/Cruise control/gi, 'Cruise Control')
+    .replace(/inch inch/gi, 'inch')
+    .replace(/  +/g, ' ') // Remove extra spaces
+    .trim();
+}
 
 // Middleware to verify JWT token
 const authenticateToken = (req, res, next) => {
@@ -2015,6 +2323,158 @@ pool.query(`
   console.log('✅ Scraper jobs table ready');
 }).catch(err => {
   console.error('❌ Error creating scraper_jobs table:', err);
+});
+
+// Create title cleanup function in database
+pool.query(`
+  CREATE OR REPLACE FUNCTION cleanup_vehicle_title(input_text TEXT) 
+  RETURNS TEXT AS $$
+  BEGIN
+    RETURN TRIM(
+      REGEXP_REPLACE(
+        REGEXP_REPLACE(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                      REGEXP_REPLACE(
+                        REGEXP_REPLACE(
+                          REGEXP_REPLACE(
+                            REGEXP_REPLACE(
+                              REGEXP_REPLACE(
+                                REGEXP_REPLACE(
+                                  REGEXP_REPLACE(
+                                    REGEXP_REPLACE(
+                                      REGEXP_REPLACE(
+                                        REGEXP_REPLACE(
+                                          REGEXP_REPLACE(
+                                            REGEXP_REPLACE(input_text,
+                                            'Landcruiser Prado', 'Land Cruiser Prado', 'gi'),
+                                          'LandcruiserPrado', 'Land Cruiser Prado', 'gi'),
+                                        'Land CruiserPrado', 'Land Cruiser Prado', 'gi'),
+                                      'CruiserPrado', 'Cruiser Prado', 'gi'),
+                                    'Landcruiser', 'Land Cruiser', 'gi'),
+                                  'hilux surf', 'Hilux Surf', 'gi'),
+                                'Electric sliding door on both sides', 'Dual Electric Sliding Doors', 'gi'),
+                              'Both sides electric', 'Dual Electric', 'gi'),
+                            'Both sides power slide', 'Dual Power Sliding', 'gi'),
+                          'Rear seat monitor', 'Rear Seat Monitor', 'gi'),
+                        'Around view monitor', 'Around View Monitor', 'gi'),
+                      'Sun Roof', 'Sunroof', 'gi'),
+                    'Back camera', 'Backup Camera', 'gi'),
+                  'Air conditioner', 'Air Conditioning', 'gi'),
+                'Intelligent key', 'Smart Key', 'gi'),
+              'One owner car', 'One Owner', 'gi'),
+            'Non smoking', 'Non-Smoking', 'gi'),
+          'inch inch', 'inch', 'gi'),
+        '\\s+', ' ', 'g'),
+      '\\s+', ' ', 'g')
+    );
+  END;
+  $$ LANGUAGE plpgsql IMMUTABLE;
+`).then(() => {
+  console.log('✅ Title cleanup function created in database');
+}).catch(err => {
+  console.error('❌ Error creating title cleanup function:', err);
+});
+
+// Create trigger to automatically clean titles on insert/update
+pool.query(`
+  CREATE OR REPLACE FUNCTION trigger_cleanup_vehicle_title() 
+  RETURNS TRIGGER AS $$
+  BEGIN
+    NEW.title_description := cleanup_vehicle_title(NEW.title_description);
+    RETURN NEW;
+  END;
+  $$ LANGUAGE plpgsql;
+`).then(() => {
+  console.log('✅ Title cleanup trigger function created');
+}).catch(err => {
+  console.error('❌ Error creating trigger function:', err);
+});
+
+pool.query(`
+  DROP TRIGGER IF EXISTS cleanup_title_trigger ON vehicles;
+  CREATE TRIGGER cleanup_title_trigger
+    BEFORE INSERT OR UPDATE OF title_description ON vehicles
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_cleanup_vehicle_title();
+`).then(() => {
+  console.log('✅ Title cleanup trigger installed on vehicles table');
+}).catch(err => {
+  console.error('❌ Error installing trigger:', err);
+});
+
+// Admin endpoint to clean up existing vehicle titles
+app.post('/api/admin/cleanup-titles', async (req, res) => {
+  try {
+    console.log('Starting title cleanup process...');
+    
+    // Get all vehicles with problematic titles
+    const query = `
+      SELECT id, title_description 
+      FROM vehicles 
+      WHERE title_description ILIKE '%CruiserPrado%' 
+         OR title_description ILIKE '%Landcruiser%'
+         OR title_description ~ '[ぁ-んァ-ヶー]'
+      ORDER BY id
+    `;
+    
+    const result = await pool.query(query);
+    console.log(`Found ${result.rows.length} titles that need cleanup`);
+    
+    let successCount = 0;
+    let errorCount = 0;
+    
+    // Process in small batches to avoid overwhelming the translation API
+    for (let i = 0; i < result.rows.length; i += 5) {
+      const batch = result.rows.slice(i, Math.min(i + 5, result.rows.length));
+      
+      console.log(`Processing batch ${Math.floor(i/5) + 1}/${Math.ceil(result.rows.length/5)}...`);
+      
+      for (const row of batch) {
+        try {
+          const cleanedTitle = await translateAndCleanTitle(row.title_description);
+          
+          // Update the database
+          await pool.query(
+            'UPDATE vehicles SET title_description = $1 WHERE id = $2',
+            [cleanedTitle, row.id]
+          );
+          
+          console.log(`✓ ID ${row.id}: ${cleanedTitle.substring(0, 80)}...`);
+          successCount++;
+          
+        } catch (error) {
+          console.error(`✗ ID ${row.id}: Cleanup failed - ${error.message}`);
+          errorCount++;
+        }
+      }
+      
+      // Small delay between batches to avoid rate limiting
+      await new Promise(resolve => setTimeout(resolve, 2000));
+    }
+    
+    res.json({
+      success: true,
+      message: 'Title cleanup completed',
+      data: {
+        processed: result.rows.length,
+        success: successCount,
+        errors: errorCount
+      }
+    });
+    
+  } catch (error) {
+    console.error('Title cleanup error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to cleanup titles',
+      details: error.message
+    });
+  }
 });
 
 // Start server

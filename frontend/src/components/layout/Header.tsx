@@ -114,7 +114,13 @@ export default function Header() {
     const formData = new FormData(e.currentTarget);
     const query = formData.get('query') as string;
     if (query.trim()) {
-      router.push(`/vehicles?q=${encodeURIComponent(query.trim())}`);
+      const searchUrl = `/vehicles?q=${encodeURIComponent(query.trim())}`;
+      if (router.pathname === '/vehicles') {
+        // Force reload if already on vehicles page
+        window.location.href = searchUrl;
+      } else {
+        router.push(searchUrl);
+      }
     }
   };
 
@@ -153,7 +159,9 @@ export default function Header() {
                 placeholder="Search Land Cruiser, Hilux..."
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
               />
-              <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 hover:text-primary-600" />
+              </button>
             </form>
           </div>
 
@@ -279,7 +287,9 @@ export default function Header() {
                     placeholder="Search vehicles..."
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                   />
-                  <MagnifyingGlassIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <button type="submit" className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <MagnifyingGlassIcon className="h-4 w-4 text-gray-400 hover:text-primary-600" />
+                  </button>
                 </form>
               </div>
               

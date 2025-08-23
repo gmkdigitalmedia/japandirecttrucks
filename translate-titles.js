@@ -1,30 +1,44 @@
 const { translate } = require('@vitalets/google-translate-api');
 const { Client } = require('pg');
 
-// Database connection
+// Database connection - dynamically determine which database to use
+const isDevelopment = process.argv.includes('--dev');
 const client = new Client({
   host: 'localhost',
-  port: 5432,
-  database: 'gps_trucks_japan',
-  user: 'postgres',
-  password: 'postgres'
+  port: isDevelopment ? 5433 : 5432,
+  database: isDevelopment ? 'gps_trucks_japan_local' : 'gps_trucks_japan',
+  user: isDevelopment ? 'gp' : 'postgres',
+  password: isDevelopment ? 'gp' : 'postgres'
 });
+
+console.log(`Using ${isDevelopment ? 'DEVELOPMENT' : 'PRODUCTION'} database`);
 
 async function translateTitles() {
   try {
     await client.connect();
     console.log('Connected to database');
 
-    // Get all vehicles with Japanese characters
+    // Get all vehicles that need cleanup (Japanese characters OR problematic text)
     const query = `
       SELECT id, title_description 
       FROM vehicles 
       WHERE title_description ~ '[ぁ-んァ-ヶー]'
+         OR title_description ILIKE '%CruiserPrado%'
+         OR title_description ILIKE '%LandcruiserPrado%'
+         OR title_description ILIKE '%Landcruiser Prado%'
+         OR title_description ILIKE '%Landcruiser%'
+         OR title_description ILIKE '%hilux surf%'
+         OR title_description ILIKE '%Back camera%'
+         OR title_description ILIKE '%Sun Roof%'
+         OR title_description ILIKE '%Air conditioner%'
+         OR title_description ILIKE '%One owner car%'
+         OR title_description ILIKE '%Non smoking%'
+         OR title_description ILIKE '%inch inch%'
       ORDER BY id
     `;
     
     const result = await client.query(query);
-    console.log(`Found ${result.rows.length} titles with Japanese characters`);
+    console.log(`Found ${result.rows.length} titles that need translation/cleanup`);
 
     let successCount = 0;
     let errorCount = 0;
@@ -37,15 +51,29 @@ async function translateTitles() {
       
       for (const row of batch) {
         try {
-          // Translate the title
-          const translated = await translate(row.title_description, {from: 'ja', to: 'en'});
+          let cleanedText;
           
-          // Clean up the translation
-          let cleanedText = translated.text;
+          // Check if translation is needed (contains Japanese characters)
+          const hasJapanese = /[ぁ-んァ-ヶー]/.test(row.title_description);
+          
+          if (hasJapanese) {
+            // Translate the title
+            const translated = await translate(row.title_description, {from: 'ja', to: 'en'});
+            cleanedText = translated.text;
+            console.log(`🌐 Translated: ${row.title_description.substring(0, 50)}...`);
+          } else {
+            // English text, just needs cleanup
+            cleanedText = row.title_description;
+            console.log(`🔧 Cleaning: ${row.title_description.substring(0, 50)}...`);
+          }
           
           // Fix common translation issues
           cleanedText = cleanedText
-            .replace(/Landcruiser/gi, 'Land Cruiser')
+            .replace(/Land Cruiser Prado/gi, 'Landcruiser Prado')
+            .replace(/LandcruiserPrado/gi, 'Landcruiser Prado')
+            .replace(/Land CruiserPrado/gi, 'Landcruiser Prado')
+            .replace(/CruiserPrado/gi, 'cruiser Prado')
+            .replace(/Land Cruiser/gi, 'Landcruiser')
             .replace(/hilux surf/gi, 'Hilux Surf')
             .replace(/FJ Cruiser/gi, 'FJ Cruiser')
             .replace(/Electric sliding door on both sides/gi, 'Dual Electric Sliding Doors')

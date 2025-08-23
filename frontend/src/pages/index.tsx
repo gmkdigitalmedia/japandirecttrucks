@@ -13,34 +13,34 @@ import { trackSearch, trackCategoryClick } from '@/components/GoogleAnalytics';
 
 const categories = [
   {
-    name: 'Land Cruiser 70',
+    name: 'Landcruiser 70',
     description: 'Classic workhorse - Unmatched reliability & durability',
     manufacturer: 'Toyota',
-    model: 'Land Cruiser 70',
+    model: 'Landcruiser 70',
   },
   {
-    name: 'Land Cruiser 100',
+    name: 'Landcruiser 100',
     description: 'Legendary 4.7L V8 - The perfect balance of luxury & capability',
     manufacturer: 'Toyota',
-    model: 'Land Cruiser 100',
+    model: 'Landcruiser 100',
   },
   {
-    name: 'Land Cruiser 200',
+    name: 'Landcruiser 200',
     description: 'Luxury V8 SUV - Premium comfort meets off-road capability',
     manufacturer: 'Toyota',
-    model: 'Land Cruiser 200',
+    model: 'Landcruiser 200',
   },
   {
-    name: 'Land Cruiser 300', 
+    name: 'Landcruiser 300', 
     description: 'Latest model - Twin-turbo V6 with advanced technology',
     manufacturer: 'Toyota',
-    model: 'Land Cruiser 300',
+    model: 'Landcruiser 300',
   },
   {
-    name: 'Land Cruiser 70 Pickup',
+    name: 'Landcruiser 70 Pickup',
     description: 'Commercial pickup - Built for tough work conditions',
     manufacturer: 'Toyota', 
-    model: 'Land Cruiser 70 Pickup',
+    model: 'Landcruiser 70 Pickup',
     categoryId: 'pickup',
   },
   {
@@ -108,16 +108,16 @@ export default function HomePage() {
     const fetchCategoryImages = async () => {
       const images: {[key: string]: string} = {};
       
-      // Fetch Land Cruiser 70 for Browse by Brand  
+      // Fetch Landcruiser 70 for Browse by Brand  
       try {
-        const lc70Response = await fetch(`/api/vehicles?manufacturer=Toyota&model=Land%20Cruiser%2070&limit=10`);
+        const lc70Response = await fetch(`/api/vehicles?manufacturer=Toyota&model=Landcruiser%2070&limit=10`);
         const lc70Data = await lc70Response.json();
         
         if (lc70Data.success && lc70Data.data && lc70Data.data.length > 0) {
           const availableLc70s = lc70Data.data.filter((v: any) => v.is_available);
           if (availableLc70s.length > 0) {
             const randomLc70 = availableLc70s[Math.floor(Math.random() * availableLc70s.length)];
-            images['Land Cruiser 70'] = randomLc70.primary_image || '/images/placeholder-vehicle.jpg';
+            images['Landcruiser 70'] = randomLc70.primary_image || '/images/placeholder-vehicle.jpg';
           }
         }
       } catch (error) {
@@ -191,7 +191,7 @@ export default function HomePage() {
     <>
       <DefaultSEO 
         title="#1 Toyota Land Cruiser Export from Japan - Japan Direct Trucks | American Owned"
-        description="Leading Toyota Land Cruiser exporter in Japan. American-owned with direct auction access. Export Land Cruiser 70, 200, 300 to USA, Australia, UK, Kenya, Dubai. Best prices, professional service."
+        description="Leading Toyota Landcruiser exporter in Japan. American-owned with direct auction access. Export Landcruiser 70, 200, 300 to USA, Australia, UK, Kenya, Dubai. Best prices, professional service."
         keywords="toyota land cruiser export japan, land cruiser 70 export, land cruiser 200 export, land cruiser 300 export, buy land cruiser from japan, japanese land cruiser exporter, land cruiser specialist japan, best land cruiser exporter, toyota land cruiser japan, american owned japan exporter"
         url="https://japandirecttrucks.com"
       />
@@ -324,14 +324,14 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <button
-              onClick={() => router.push(`/vehicles?q=${encodeURIComponent('Land Cruiser 70')}`)}
+              onClick={() => router.push('/manufacturers')}
               className="group relative bg-white rounded-lg shadow-sm border hover:shadow-md transition-all duration-200 overflow-hidden text-left"
             >
               <div className="aspect-w-16 aspect-h-9 bg-gray-200">
-                {categoryImages['Land Cruiser 70'] ? (
+                {categoryImages['Landcruiser 70'] ? (
                   <img
-                    src={categoryImages['Land Cruiser 70']}
-                    alt="Toyota Land Cruiser 70"
+                    src={categoryImages['Landcruiser 70']}
+                    alt="Toyota Landcruiser 70"
                     className="w-full h-full object-cover"
                   />
                 ) : (
@@ -345,7 +345,7 @@ export default function HomePage() {
                   Browse by Brand
                 </h3>
                 <p className="text-sm text-gray-600">
-                  Toyota Land Cruiser 70 & more
+                  Toyota, Nissan, Honda & more
                 </p>
               </div>
             </button>
