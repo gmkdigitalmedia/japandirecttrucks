@@ -15,9 +15,12 @@ export class VehicleService {
     // Replace "landcruiser" with "land cruiser"
     processedQuery = processedQuery.replace(/landcruiser/g, 'land cruiser');
     
-    // If query contains just "land", replace with "land cruiser"
-    if (normalizedQuery === 'land') {
-      processedQuery = 'land cruiser';
+    // If query contains "land" anywhere, enhance with "land cruiser"  
+    if (words.some(word => word.includes('land'))) {
+      // Add land cruiser terms if not already present
+      if (!processedQuery.includes('land cruiser')) {
+        processedQuery = `land cruiser ${processedQuery}`;
+      }
     }
     
     // Check for Land Cruiser model numbers and enhance search
