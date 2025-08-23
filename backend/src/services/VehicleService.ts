@@ -3,6 +3,40 @@ import { Vehicle, SearchFilters, PaginationOptions, SortOptions, SearchResult } 
 import { logger } from '@/utils/logger';
 
 export class VehicleService {
+  private preprocessSearchQuery(query: string): string {
+    if (!query) return query;
+    
+    const normalizedQuery = query.toLowerCase().trim();
+    const landCruiserNumbers = ['40', '60', '70', '80', '100', '200', '300'];
+    const words = normalizedQuery.split(/\s+/);
+    
+    let processedQuery = normalizedQuery;
+    
+    // Replace "landcruiser" with "land cruiser"
+    processedQuery = processedQuery.replace(/landcruiser/g, 'land cruiser');
+    
+    // If query contains just "land", replace with "land cruiser"
+    if (normalizedQuery === 'land') {
+      processedQuery = 'land cruiser';
+    }
+    
+    // Check for Land Cruiser model numbers and enhance search
+    const hasLandCruiserNumber = landCruiserNumbers.some(num => words.includes(num));
+    const hasLandWord = words.some(word => word.includes('land'));
+    
+    if (hasLandCruiserNumber) {
+      if (!hasLandWord) {
+        // If number found but no "land", add "land cruiser"
+        processedQuery = `land cruiser ${processedQuery}`;
+      } else {
+        // Ensure "land cruiser" is properly spaced
+        processedQuery = processedQuery.replace(/land\s*cruiser/g, 'land cruiser');
+      }
+    }
+    
+    return processedQuery;
+  }
+
   async searchVehicles(
     filters: SearchFilters,
     pagination: PaginationOptions,
@@ -26,8 +60,9 @@ export class VehicleService {
 
       if (filters.query) {
         paramCount++;
+        const processedQuery = this.preprocessSearchQuery(filters.query);
         query += ` AND v.search_vector @@ plainto_tsquery('english', $${paramCount})`;
-        queryParams.push(filters.query);
+        queryParams.push(processedQuery);
       }
 
       if (filters.manufacturer) {

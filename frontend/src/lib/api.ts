@@ -1,9 +1,9 @@
 import axios from 'axios';
 import { ApiResponse, SearchParams, Vehicle, PaginatedResponse, Inquiry, Manufacturer, Model } from '@/types';
 
-// Point directly to backend server
+// Use relative URLs to go through Next.js API proxy
 const api = axios.create({
-  baseURL: 'http://localhost:3002/api',
+  baseURL: '/api',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
