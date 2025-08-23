@@ -14,6 +14,8 @@ import inquiryRoutes from '@/routes/inquiries';
 import authRoutes from '@/routes/auth';
 import adminRoutes from '@/routes/admin';
 import imageRoutes from '@/routes/images';
+import manufacturerRoutes from '@/routes/manufacturers';
+import modelRoutes from '@/routes/models';
 
 dotenv.config();
 
@@ -94,7 +96,9 @@ app.get('/api', (req, res) => {
       vehicles: '/api/vehicles',
       inquiries: '/api/inquiries',
       auth: '/api/auth',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      manufacturers: '/api/manufacturers',
+      models: '/api/models'
     }
   });
 });
@@ -104,6 +108,8 @@ app.use('/api/inquiries', inquiryRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/images', imageRoutes);
+app.use('/api/manufacturers', manufacturerRoutes);
+app.use('/api/models', modelRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
