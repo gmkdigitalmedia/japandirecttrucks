@@ -1,14 +1,14 @@
 services:
-  # Database
+  # Local Development Database (copy of production data)
   postgres-dev:
     image: postgres:15-alpine
-    container_name: gps-trucks-db-dev
+    container_name: gps-trucks-db-local-dev
     environment:
-      POSTGRES_DB: gps_trucks_japan_dev
+      POSTGRES_DB: gps_trucks_japan_local
       POSTGRES_USER: gp
       POSTGRES_PASSWORD: Megumi12
     ports:
-      - "5433:5432"  # Different port to avoid conflicts
+      - "5433:5432"  # Different port to avoid conflicts with production
     volumes:
       - postgres_dev_data:/var/lib/postgresql/data
       - ./database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql
@@ -20,36 +20,36 @@ services:
     networks:
       - gps-dev-network
 
-  # Redis for caching
+  # Local Development Redis
   redis-dev:
     image: redis:7-alpine
-    container_name: gps-trucks-redis-dev
+    container_name: gps-trucks-redis-local-dev
     ports:
-      - "6380:6379"  # Different port to avoid conflicts
+      - "6380:6379"  # Different port to avoid conflicts with production
     volumes:
       - redis_dev_data:/data
     networks:
       - gps-dev-network
 
-  # Backend API
+  # Local Development Backend API
   backend-dev:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: gps-trucks-backend-dev
+    container_name: gps-trucks-backend-local-dev
     environment:
       NODE_ENV: development
-      DATABASE_URL: postgres://gp:Megumi12@postgres-dev:5432/gps_trucks_japan_dev
+      DATABASE_URL: postgres://gp:Megumi12@postgres-dev:5432/gps_trucks_japan_local
       DB_HOST: postgres-dev
       DB_PORT: 5432
-      DB_NAME: gps_trucks_japan_dev
+      DB_NAME: gps_trucks_japan_local
       DB_USER: gp
       DB_PASSWORD: Megumi12
       REDIS_URL: redis://redis-dev:6379
       JWT_SECRET: gps-trucks-japan-super-secret-jwt-key-2024-dev
       PORT: 3002
     ports:
-      - "3002:3002"
+      - "3003:3002"  # Different external port to avoid conflicts
     volumes:
       - ./backend:/app  # Live code reloading for development
       - /app/node_modules
@@ -61,19 +61,19 @@ services:
         condition: service_started
     networks:
       - gps-dev-network
-    command: npm run dev  # Use dev command for hot reloading
+    command: node simple-server.js  # Use same as production
 
-  # Frontend
+  # Local Development Frontend
   frontend-dev:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: gps-trucks-frontend-dev
+    container_name: gps-trucks-frontend-local-dev
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3002
+      NEXT_PUBLIC_API_URL: http://localhost:3003
       NODE_ENV: development
     ports:
-      - "3000:3000"
+      - "3004:3000"  # Different port to avoid conflicts
     volumes:
       - ./frontend:/app  # Live code reloading for development
       - /app/node_modules
@@ -84,17 +84,17 @@ services:
       - gps-dev-network
     command: npm run dev
 
-  # Admin Panel
+  # Local Development Admin Panel
   admin-dev:
     build:
       context: ./admin
       dockerfile: Dockerfile
-    container_name: gps-trucks-admin-dev
+    container_name: gps-trucks-admin-local-dev
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:3002
+      NEXT_PUBLIC_API_URL: http://localhost:3003
       NODE_ENV: development
     ports:
-      - "3001:3001"
+      - "3005:3001"  # Different port to avoid conflicts
     volumes:
       - ./admin:/app  # Live code reloading for development
       - /app/node_modules
