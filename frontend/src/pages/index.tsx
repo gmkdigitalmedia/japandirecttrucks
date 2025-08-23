@@ -154,11 +154,19 @@ export default function HomePage() {
 
   const fetchHeroVehicles = async () => {
     try {
-      const response = await fetch('/api/vehicles?manufacturer=Toyota&model=Land%20Cruiser%20300&limit=12');
-      const data = await response.json();
-      if (data.success && data.data) {
-        setHeroVehicles(data.data.filter((v: any) => v.is_available && v.primary_image));
+      // Get specific Landcruiser models for hero background
+      const models = ['Landcruiser%2070', 'Landcruiser%2070%20Pickup', 'Landcruiser%20200', 'Landcruiser%20300'];
+      const allVehicles = [];
+      
+      for (const model of models) {
+        const response = await fetch(`/api/vehicles?manufacturer=Toyota&model=${model}&limit=3`);
+        const data = await response.json();
+        if (data.success && data.data) {
+          allVehicles.push(...data.data.filter((v: any) => v.is_available && v.primary_image));
+        }
       }
+      
+      setHeroVehicles(allVehicles);
     } catch (error) {
       console.error('Failed to fetch hero vehicles:', error);
     }
@@ -190,9 +198,9 @@ export default function HomePage() {
   return (
     <>
       <DefaultSEO 
-        title="#1 Toyota Land Cruiser Export from Japan - Japan Direct Trucks | American Owned"
+        title="#1 Toyota Landcruiser Export from Japan - Japan Direct Trucks | American Owned"
         description="Leading Toyota Landcruiser exporter in Japan. American-owned with direct auction access. Export Landcruiser 70, 200, 300 to USA, Australia, UK, Kenya, Dubai. Best prices, professional service."
-        keywords="toyota land cruiser export japan, land cruiser 70 export, land cruiser 200 export, land cruiser 300 export, buy land cruiser from japan, japanese land cruiser exporter, land cruiser specialist japan, best land cruiser exporter, toyota land cruiser japan, american owned japan exporter"
+        keywords="toyota landcruiser export japan, landcruiser 70 export, landcruiser 200 export, landcruiser 300 export, buy landcruiser from japan, japanese landcruiser exporter, landcruiser specialist japan, best landcruiser exporter, toyota landcruiser japan, american owned japan exporter, land cruiser export japan, land cruiser 70 export, land cruiser 200 export, land cruiser 300 export"
         url="https://japandirecttrucks.com"
       />
       <Layout>
@@ -209,7 +217,7 @@ export default function HomePage() {
                     {vehicle?.primary_image && (
                       <img
                         src={`/api/images/proxy?url=${encodeURIComponent(vehicle.primary_image)}`}
-                        alt="Land Cruiser 70"
+                        alt="Landcruiser"
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           console.log('Image failed to load:', vehicle.primary_image);
@@ -233,12 +241,12 @@ export default function HomePage() {
           <div className="max-w-4xl mx-auto text-center">
             <div className="bg-black/70 backdrop-blur-sm rounded-xl md:rounded-2xl p-4 md:p-6 mb-4 md:mb-6 inline-block">
               <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold font-display text-balance">
-                #1 Toyota Land Cruiser Export from Japan
+                #1 Toyota Landcruiser Export from Japan
               </h1>
               <p className="text-lg sm:text-xl text-yellow-400 mt-2">American-owned exporter with direct access to Japan's exclusive auctions</p>
             </div>
             <p className="text-lg sm:text-xl lg:text-2xl mb-4 md:mb-6 text-gray-200 text-balance max-w-3xl mx-auto">
-              Skip the middleman. Get premium Land Cruisers, Hilux, and JDM legends 
+              Skip the middleman. Get premium Landcruisers, Hilux, and JDM legends 
               at true Japanese market prices.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-200 mb-6 md:mb-8 max-w-2xl mx-auto">
