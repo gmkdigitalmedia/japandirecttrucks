@@ -533,30 +533,6 @@ export default function HomePage() {
         </section>
       )}
 
-      {/* Video Section */}
-      <section className="section-padding bg-gray-900">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl font-bold text-white mb-6">
-              See Our Export Process in Action
-            </h2>
-            <p className="text-xl text-gray-300 mb-8">
-              Watch how we handle every step from purchase to shipping
-            </p>
-            <div className="relative aspect-video rounded-lg overflow-hidden shadow-2xl">
-              <iframe 
-                src="https://www.youtube.com/embed/Nqaihw-ZXpI"
-                title="Japan Direct Trucks Export Process"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="absolute inset-0 w-full h-full"
-              ></iframe>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Contact & WhatsApp Section */}
       <section className="section-padding bg-gray-50">
         <div className="container mx-auto px-4">
