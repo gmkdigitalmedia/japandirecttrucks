@@ -264,7 +264,18 @@ export default function VehicleDetailPage() {
                     Why This Vehicle Stands Out
                   </h3>
                   <p className="text-gray-700 leading-relaxed">
-                    {(vehicle as any).ai_description}
+                    {(() => {
+                      const desc = (vehicle as any).ai_description;
+                      if (desc && desc.startsWith('{')) {
+                        try {
+                          const parsed = JSON.parse(desc);
+                          return parsed.description || desc;
+                        } catch {
+                          return desc;
+                        }
+                      }
+                      return desc;
+                    })()}
                   </p>
                 </div>
               )}
@@ -343,16 +354,57 @@ export default function VehicleDetailPage() {
           </div>
 
           {/* AI Analysis */}
-          {vehicle.ai_analysis && (
-            <div className="mb-8">
-              <AIAnalysisCard 
-                analysis={vehicle.ai_analysis}
-                vehiclePrice={Math.round(vehicle.price_total_yen / 150)}
-                vehicleMileage={vehicle.mileage_km}
-                vehicleYear={vehicle.model_year_ad}
-              />
-            </div>
-          )}
+          {(() => {
+            // FORCE use AI data if available, otherwise fallback to backend
+            let aiAnalysis = null;
+            
+            const desc = (vehicle as any).ai_description;
+            if (desc && desc.startsWith('{')) {
+              try {
+                const parsed = JSON.parse(desc);
+                if (parsed.market_data) {
+                  // ALWAYS use AI-generated market data
+                  aiAnalysis = {
+                    value_headline: `Save $${(parsed.market_data.savings_amount || 0).toLocaleString()} vs USA market`,
+                    mileage_advantage: vehicle.mileage_km < (vehicle.model_year_ad ? (2025 - vehicle.model_year_ad) * 11000 : 50000) ? 
+                      'Below average mileage' : 'Average mileage',
+                    key_benefits: [
+                      "Japanese maintenance standards",
+                      "Export documentation included", 
+                      "Professional inspection",
+                      parsed.market_data.savings_percentage > 20 ? "Exceptional value" : "Competitive pricing"
+                    ],
+                    market_comparison: `Compared to similar ${vehicle.model_year_ad} ${vehicle.manufacturer?.name || ''} ${vehicle.model?.name || ''} in USA market`,
+                    confidence_score: parsed.market_data.savings_percentage > 30 ? 9 : 7,
+                    usa_price_estimate: parsed.market_data.usa_price_estimate || 0,
+                    savings_amount: parsed.market_data.savings_amount || 0,
+                    savings_percentage: parsed.market_data.savings_percentage || 0
+                  };
+                }
+              } catch (e) {
+                // Parsing failed
+              }
+            }
+            
+            // Fallback to backend data only if no AI data
+            if (!aiAnalysis) {
+              aiAnalysis = vehicle.ai_analysis;
+            }
+
+            return aiAnalysis ? (
+              <div className="mb-8">
+                <AIAnalysisCard 
+                  analysis={aiAnalysis}
+                  vehiclePrice={Math.round(vehicle.price_total_yen / 150)}
+                  vehicleMileage={vehicle.mileage_km}
+                  vehicleYear={vehicle.model_year_ad}
+                  usaPrice={aiAnalysis.usa_price_estimate}
+                  savings={aiAnalysis.savings_amount}
+                  savingsPercent={aiAnalysis.savings_percentage}
+                />
+              </div>
+            ) : null;
+          })()}
 
           {/* Comprehensive Specifications Table */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">

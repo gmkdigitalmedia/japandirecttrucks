@@ -63,7 +63,7 @@ export default function USAPage() {
       <BusinessSchema 
         page="usa" 
         country="United States"
-        description="Japanese vehicle import to USA. 25+ year rule specialists. Toyota Land Cruisers with EPA/DOT compliance assistance."
+        description="Japanese vehicle import to USA. 25+ year rule specialists. Toyota Landcruisers with EPA/DOT compliance assistance."
       />
 
       <Layout>
@@ -78,7 +78,7 @@ export default function USAPage() {
                 </h1>
               </div>
               <p className="text-xl md:text-2xl mb-8 opacity-90">
-                Import authentic Toyota Land Cruisers, Hilux & more with EPA/DOT compliance
+                Import authentic Toyota Landcruisers, Hilux & more with EPA/DOT compliance
               </p>
               <div className="bg-white/10 rounded-lg p-6 backdrop-blur-sm">
                 <div className="grid md:grid-cols-3 gap-4 text-center">

@@ -133,7 +133,7 @@ app.get('/api/images/proxy', async (req, res) => {
   } catch (error) {
     console.error('Image proxy error:', error);
     
-    if (error.response?.status === 404) {
+    if (error.response && error.response.status === 404) {
       return res.status(404).json({
         success: false,
         error: 'Image not found'
@@ -1039,16 +1039,87 @@ app.get('/api/vehicles/:id', async (req, res) => {
       is_featured: row.is_featured,
       is_available: row.is_available,
       created_at: row.created_at,
-      images: row.images || [],
-      ai_description: row.ai_description
+      images: row.images || []
     };
     
-    // Generate AI analysis for the vehicle
-    vehicle.ai_analysis = generateAIAnalysis({
-      ...vehicle,
-      manufacturer_name: row.manufacturer_name,
-      model_name: row.model_name
-    });
+    // Parse AI description and extract market data if available
+    let cleanDescription = row.ai_description || '';
+    let aiAnalysis = null;
+    
+    // Check if ai_description is JSON format
+    if (cleanDescription && cleanDescription.startsWith('{')) {
+      try {
+        const parsed = JSON.parse(cleanDescription);
+        
+        if (parsed.market_data && parsed.description) {
+          // New format: {"market_data": {...}, "description": "..."}
+          cleanDescription = parsed.description;
+          const marketData = parsed.market_data;
+          
+          aiAnalysis = {
+          value_headline: `Save $${(marketData.savings_amount || 0).toLocaleString()} vs USA market`,
+          mileage_advantage: vehicle.mileage_km < (vehicle.model_year_ad ? (2025 - vehicle.model_year_ad) * 11000 : 50000) ? 
+            'Below average mileage' : 'Average mileage',
+          key_benefits: [
+            "Japanese maintenance standards",
+            "Export documentation included", 
+            "Professional inspection",
+            marketData.savings_percentage > 20 ? "Exceptional value" : "Competitive pricing"
+          ],
+          market_comparison: `Compared to similar ${vehicle.model_year_ad} ${row.manufacturer_name || ''} ${row.model_name || ''} in USA market`,
+          confidence_score: marketData.savings_percentage > 30 ? 9 : 7,
+          usa_price_estimate: marketData.usa_price_estimate || 0,
+          savings_amount: marketData.savings_amount || 0,
+          savings_percentage: marketData.savings_percentage || 0
+        };
+        } else {
+          // Might be old format, just use as description
+          cleanDescription = cleanDescription;
+        }
+      } catch (e) {
+        console.log('Could not parse JSON from AI description');
+      }
+    } else if (cleanDescription && cleanDescription.includes('<!--MARKET_DATA:')) {
+      // Old format with HTML comment (backward compatibility)
+      const parts = cleanDescription.split('<!--MARKET_DATA:');
+      cleanDescription = parts[0].trim();
+      
+      try {
+        const jsonStr = parts[1].replace('-->', '').trim();
+        const marketData = JSON.parse(jsonStr);
+        
+        aiAnalysis = {
+          value_headline: `Save $${(marketData.savings_amount || 0).toLocaleString()} vs USA market`,
+          mileage_advantage: vehicle.mileage_km < (vehicle.model_year_ad ? (2025 - vehicle.model_year_ad) * 11000 : 50000) ? 
+            'Below average mileage' : 'Average mileage',
+          key_benefits: [
+            "Japanese maintenance standards",
+            "Export documentation included", 
+            "Professional inspection",
+            marketData.savings_percentage > 20 ? "Exceptional value" : "Competitive pricing"
+          ],
+          market_comparison: `Compared to similar ${vehicle.model_year_ad} ${row.manufacturer_name || ''} ${row.model_name || ''} in USA market`,
+          confidence_score: marketData.savings_percentage > 30 ? 9 : 7,
+          usa_price_estimate: marketData.usa_price_estimate || 0,
+          savings_amount: marketData.savings_amount || 0,
+          savings_percentage: marketData.savings_percentage || 0
+        };
+      } catch (e) {
+        console.log('Could not parse market data from HTML comment');
+      }
+    }
+    
+    // If no AI market data, generate it dynamically (fallback)
+    if (!aiAnalysis) {
+      aiAnalysis = generateAIAnalysis({
+        ...vehicle,
+        manufacturer_name: row.manufacturer_name,
+        model_name: row.model_name
+      });
+    }
+    
+    vehicle.ai_description = cleanDescription;
+    vehicle.ai_analysis = aiAnalysis;
     
     res.json({
       success: true,

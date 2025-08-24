@@ -190,8 +190,8 @@ const processSteps = [
   },
   {
     step: 4,
-    title: 'Storage & Port Transfer',
-    description: 'Vehicle stored safely until transport, then transferred to Japanese port',
+    title: 'Export Documentation',
+    description: 'All export paperwork and customs documentation prepared',
     icon: TruckIcon,
     cost: 'Included'
   },
@@ -238,11 +238,11 @@ export default function ExportProcessPage() {
                 </div>
                 <div className="flex items-center space-x-2 bg-primary-700 px-4 py-2 rounded-full">
                   <CheckCircleIcon className="h-5 w-5" />
-                  <span>Professional Storage</span>
+                  <span>Road-Approved Vehicles</span>
                 </div>
                 <div className="flex items-center space-x-2 bg-primary-700 px-4 py-2 rounded-full">
                   <CheckCircleIcon className="h-5 w-5" />
-                  <span>Port Transfer Included</span>
+                  <span>Transparent Pricing</span>
                 </div>
               </div>
             </div>
@@ -274,7 +274,7 @@ export default function ExportProcessPage() {
                       Save Money Overall
                     </h3>
                     <p className="text-gray-600">
-                      Our transparent pricing ($500 + 10% of vehicle price) is competitive when you factor in 
+                      Our transparent pricing ($500 optional inspection + 10% of vehicle price) is competitive when you factor in 
                       the hidden costs of auctions: surprise repairs ($2,000-5,000), transport fees, documentation 
                       charges, and storage costs that other agents add on top.
                     </p>
@@ -336,7 +336,7 @@ export default function ExportProcessPage() {
               
               {/* Pricing Comparison */}
               <div className="mt-12 bg-gray-50 rounded-lg p-6">
-                <h3 className="text-xl font-semibold mb-4 text-center">Transparent Pricing Comparison</h3>
+                <h3 className="text-xl font-semibold mb-4 text-center">Why Our Pricing Is Better</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <h4 className="font-semibold text-gray-900 mb-3">Typical Auction Route</h4>
@@ -347,19 +347,17 @@ export default function ExportProcessPage() {
                       <li>• Documentation: $130-200</li>
                       <li>• Storage fees: $20-50/day</li>
                       <li className="font-semibold text-red-600">• Surprise repairs: $2,000-5,000</li>
-                      <li className="font-bold text-gray-900">Total: Often $3,000-7,000+ in fees</li>
+                      <li className="font-bold text-red-700">Total fees often exceed 15-20% of vehicle price</li>
                     </ul>
                   </div>
                   <div>
                     <h4 className="font-semibold text-primary-600 mb-3">GPS Trucks Japan</h4>
                     <ul className="text-sm text-gray-600 space-y-2">
-                      <li>• Service fee: $500 + 10% of price</li>
-                      <li>• Storage: Included</li>
-                      <li>• Port transfer: Included</li>
+                      <li>• $500 optional inspection + in-person evaluation</li>
+                      <li>• Only 10% of total vehicle price</li>
                       <li>• Documentation: Included</li>
-                      <li>• All fees transparent upfront</li>
-                      <li className="font-semibold text-green-600">• Road-approved = No surprises</li>
-                      <li className="font-bold text-primary-600">Example: $2,500 total on $20k vehicle</li>
+                      <li className="font-semibold text-green-600">• Road-approved = No repair surprises</li>
+                      <li className="font-bold text-primary-600">Example: $2,500 total on $20k vehicle (12.5%)</li>
                     </ul>
                   </div>
                 </div>
@@ -516,8 +514,6 @@ export default function ExportProcessPage() {
                     <ul className="text-sm text-gray-600 space-y-2">
                       <li>• Vehicle purchase and legal documentation</li>
                       <li>• Export paperwork and customs forms</li>
-                      <li>• Professional storage until shipping</li>
-                      <li>• Transfer to Japanese port</li>
                       <li>• All required certificates and titles</li>
                     </ul>
                   </div>
@@ -539,8 +535,8 @@ export default function ExportProcessPage() {
                     <h3 className="text-lg font-semibold mb-3 text-primary-600">Timeline</h3>
                     <ul className="text-sm text-gray-600 space-y-2">
                       <li>• Documentation: 3-5 business days</li>
-                      <li>• Storage period: Until shipping arranged</li>
-                      <li>• Port transfer: 1-2 days before departure</li>
+                      <li>• Vehicle preparation: 1-3 days</li>
+                      <li>• Export documentation: 1-2 days</li>
                       <li>• Ocean transit: 2-6 weeks (destination dependent)</li>
                       <li>• Port clearance: 3-7 days</li>
                     </ul>
@@ -561,7 +557,7 @@ export default function ExportProcessPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:sales@japandirecttrucks.com"
+                href="mailto:japandirecttrucks@gmail.com"
                 className="bg-white text-primary-600 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-colors"
               >
                 Email Us

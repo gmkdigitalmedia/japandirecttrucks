@@ -54,22 +54,22 @@ const categories = [
 const processSteps = [
   {
     title: 'Search & Select',
-    description: 'Browse our curated inventory of premium Japanese vehicles',
+    description: 'Browse 50+ road-approved vehicles with detailed condition reports, 20+ high-resolution photos, and transparent pricing including all fees',
     icon: MagnifyingGlassIcon,
   },
   {
     title: 'Inspection & Purchase',
-    description: 'Professional inspection and secure purchase process',
+    description: 'Every vehicle includes certified inspection report, maintenance records translation, and video condition assessment. $200 deposit secures your vehicle.',
     icon: CheckCircleIcon,
   },
   {
     title: 'Export Documentation',
-    description: 'We handle all paperwork and export regulations',
+    description: 'Complete export documentation prepared: export certificate, bill of lading, customs forms, and title transfer - all customs-ready for your destination country',
     icon: ShieldCheckIcon,
   },
   {
     title: 'Worldwide Shipping',
-    description: 'Safe delivery to your destination port',
+    description: 'Professional container shipping with real-time tracking, arrival notifications, and pickup instructions. Average 2-6 weeks to destination port depending on location',
     icon: GlobeAltIcon,
   },
 ];
@@ -200,7 +200,7 @@ export default function HomePage() {
       <DefaultSEO 
         title="#1 Toyota Landcruiser Export from Japan - Japan Direct Trucks | American Owned"
         description="Leading Toyota Landcruiser exporter in Japan. American-owned with direct auction access. Export Landcruiser 70, 200, 300 to USA, Australia, UK, Kenya, Dubai. Best prices, professional service."
-        keywords="toyota landcruiser export japan, landcruiser 70 export, landcruiser 200 export, landcruiser 300 export, buy landcruiser from japan, japanese landcruiser exporter, landcruiser specialist japan, best landcruiser exporter, toyota landcruiser japan, american owned japan exporter, land cruiser export japan, land cruiser 70 export, land cruiser 200 export, land cruiser 300 export"
+        keywords="toyota landcruiser export japan, landcruiser 70 export, landcruiser 200 export, landcruiser 300 export, buy landcruiser from japan, japanese landcruiser exporter, landcruiser specialist japan, best landcruiser exporter, toyota landcruiser japan, american owned japan exporter, overlanding vehicles japan, land cruiser export japan, land cruiser 70 export, land cruiser 200 export, land cruiser 300 export"
         url="https://japandirecttrucks.com"
       />
       <Layout>
@@ -464,22 +464,26 @@ export default function HomePage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {processSteps.map((step, index) => (
-              <div key={index} className="text-center">
+              <a
+                key={index}
+                href="/export-process"
+                className="text-center block hover:transform hover:scale-105 transition-transform duration-200"
+              >
                 <div className="relative mb-6">
-                  <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <div className="w-16 h-16 bg-primary-600 rounded-full flex items-center justify-center mx-auto mb-4 hover:bg-primary-700 transition-colors">
                     <step.icon className="h-8 w-8 text-white" />
                   </div>
                   <div className="absolute -top-2 -right-2 w-8 h-8 bg-accent-500 text-white rounded-full flex items-center justify-center text-sm font-bold">
                     {index + 1}
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">
+                <h3 className="text-lg font-semibold mb-2 hover:text-primary-600 transition-colors">
                   {step.title}
                 </h3>
                 <p className="text-gray-600">
                   {step.description}
                 </p>
-              </div>
+              </a>
             ))}
           </div>
 

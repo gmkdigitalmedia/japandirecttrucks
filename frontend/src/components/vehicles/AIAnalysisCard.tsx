@@ -15,9 +15,12 @@ interface AIAnalysisCardProps {
   vehiclePrice: number;
   vehicleMileage: number;
   vehicleYear: number;
+  usaPrice?: number;
+  savings?: number;
+  savingsPercent?: number;
 }
 
-export default function AIAnalysisCard({ analysis, vehiclePrice, vehicleMileage, vehicleYear }: AIAnalysisCardProps) {
+export default function AIAnalysisCard({ analysis, vehiclePrice, vehicleMileage, vehicleYear, usaPrice, savings, savingsPercent }: AIAnalysisCardProps) {
   // Calculate average mileage for comparison
   const currentYear = new Date().getFullYear();
   const vehicleAge = currentYear - vehicleYear;
@@ -127,14 +130,14 @@ export default function AIAnalysisCard({ analysis, vehiclePrice, vehicleMileage,
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm text-gray-600">USA Average</span>
-            <span className="font-bold text-gray-700">${analysis.usa_price_estimate.toLocaleString()}</span>
+            <span className="font-bold text-gray-700">${(usaPrice || analysis.usa_price_estimate).toLocaleString()}</span>
           </div>
           <div className="border-t pt-2">
-            <div className={`flex items-center justify-between p-2 rounded-lg ${getSavingsColor(analysis.savings_percentage)}`}>
+            <div className={`flex items-center justify-between p-2 rounded-lg ${getSavingsColor(savingsPercent || analysis.savings_percentage)}`}>
               <span className="text-sm font-medium">Your Savings</span>
               <div className="text-right">
-                <div className="font-bold">${analysis.savings_amount.toLocaleString()}</div>
-                <div className="text-xs">{analysis.savings_percentage}% less</div>
+                <div className="font-bold">${(savings || analysis.savings_amount).toLocaleString()}</div>
+                <div className="text-xs">{(savingsPercent || analysis.savings_percentage)}% less</div>
               </div>
             </div>
           </div>

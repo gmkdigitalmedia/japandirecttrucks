@@ -167,7 +167,7 @@ export default function ContactPage() {
                       <EnvelopeIcon className="h-5 w-5 text-primary-600 mr-3 mt-1" />
                       <div>
                         <div className="font-medium text-gray-900">Email</div>
-                        <div className="text-gray-600">sales@japandirecttrucks.com</div>
+                        <div className="text-gray-600">japandirecttrucks@gmail.com</div>
                         <div className="text-sm text-gray-500">Response within 24 hours</div>
                       </div>
                     </div>

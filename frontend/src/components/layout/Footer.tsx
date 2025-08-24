@@ -32,7 +32,7 @@ const navigation = {
     },
     {
       name: 'Email',
-      href: 'mailto:sales@japandirecttrucks.com',
+      href: 'mailto:japandirecttrucks@gmail.com',
       icon: EnvelopeIcon,
     },
   ],
@@ -140,7 +140,7 @@ export default function Footer() {
                   </div>
                   <div className="flex items-center space-x-3 text-sm text-gray-300">
                     <EnvelopeIcon className="h-5 w-5 text-gray-400" />
-                    <span>sales@japandirecttrucks.com</span>
+                    <span>japandirecttrucks@gmail.com</span>
                   </div>
                 </div>
               </div>
