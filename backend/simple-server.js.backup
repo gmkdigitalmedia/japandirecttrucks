@@ -37,9 +37,9 @@ const pool = new Pool({
   database: process.env.DB_NAME || 'gps_trucks_japan',
   user: process.env.DB_USER || 'gp',
   password: process.env.DB_PASSWORD || 'Megumi12',
-  max: 10,
+  max: 20,
   idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  connectionTimeoutMillis: 2000,
 });
 
 // Middleware
@@ -982,32 +982,6 @@ app.get('/api/vehicles/stats', async (req, res) => {
   }
 });
 
-// Sitemap endpoint - returns all vehicle IDs and update dates
-app.get('/api/vehicles/sitemap', async (req, res) => {
-  try {
-    const query = `
-      SELECT id, updated_at 
-      FROM vehicles 
-      WHERE is_available = TRUE 
-      ORDER BY id
-    `;
-    
-    const result = await pool.query(query);
-    
-    res.json({
-      success: true,
-      data: result.rows
-    });
-  } catch (error) {
-    console.error('Sitemap endpoint error:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get sitemap data',
-      details: error.message
-    });
-  }
-});
-
 // Individual vehicle endpoint
 app.get('/api/vehicles/:id', async (req, res) => {
   try {
@@ -1044,47 +1018,6 @@ app.get('/api/vehicles/:id', async (req, res) => {
     }
     
     const row = result.rows[0];
-    
-    // GENERATE SEO ON-THE-FLY IF MISSING
-    let seoMetadata = row.seo_metadata;
-    console.log(`🔍 Vehicle ${id} SEO debug:`, {
-      has_seo: !!seoMetadata,
-      seo_type: typeof seoMetadata,
-      seo_keys: seoMetadata ? Object.keys(seoMetadata) : null
-    });
-    if (!seoMetadata) {
-      console.log(`⚠️ Vehicle ${id} missing SEO, generating now...`);
-      
-      // Generate SEO immediately
-      const vehicleData = {
-        id: row.id,
-        model_year_ad: row.model_year_ad,
-        mileage_km: row.mileage_km,
-        price_vehicle_yen: row.price_vehicle_yen,
-        price_total_yen: row.price_total_yen,
-        grade: row.grade,
-        is_accident_free: row.is_accident_free,
-        is_one_owner: row.is_one_owner,
-        has_warranty: row.has_warranty,
-        manufacturer_name: row.manufacturer_name,
-        model_name: row.model_name
-      };
-      
-      seoMetadata = {
-        title: seoService.generateTitle(vehicleData),
-        description: seoService.generateDescription(vehicleData),
-        keywords: seoService.generateKeywords(vehicleData),
-        og_title: `${vehicleData.model_year_ad} ${vehicleData.manufacturer_name} ${vehicleData.model_name} - Export from Japan`,
-        og_description: seoService.generateDescription(vehicleData),
-        canonical_url: `https://japandirecttrucks.com/vehicles/${row.id}`
-      };
-      
-      // Save to database in background (don't wait)
-      seoService.updateVehicleSEO(row.id, seoMetadata).catch(err => {
-        console.error(`Failed to save SEO for vehicle ${row.id}:`, err);
-      });
-    }
-    
     const vehicle = {
       id: row.id,
       title_description: row.title_description,
@@ -1109,8 +1042,10 @@ app.get('/api/vehicles/:id', async (req, res) => {
       is_available: row.is_available,
       created_at: row.created_at,
       images: row.images || [],
-      seo_metadata: row.seo_metadata, // Use database SEO metadata directly
-      ai_description: row.ai_description
+      seo_metadata: row.seo_metadata ? (function() {
+        try { return JSON.parse(row.seo_metadata); } 
+        catch(e) { console.log('JSON parse error for vehicle', row.id); return null; }
+      })() : null
     };
     
     // Parse AI description and extract market data if available
@@ -2667,10 +2602,7 @@ app.listen(port, () => {
   console.log(`Featured vehicles: http://localhost:${port}/api/vehicles/featured`);
   
   // Start SEO generation service after server is running
-  seoService.startAutomaticSEOGeneration();
-  seoService.runSEOGeneration().catch(err => {
-    logger.error('Initial SEO generation failed:', err);
-  });
+  seoService.startPeriodicSEOGeneration();
 });
 
 // Test database connection on startup

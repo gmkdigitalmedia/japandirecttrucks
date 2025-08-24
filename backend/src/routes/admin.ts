@@ -2,6 +2,7 @@ import express from 'express';
 import { VehicleService } from '@/services/VehicleService';
 import { InquiryService } from '@/services/InquiryService';
 import { ImageService } from '@/services/ImageService';
+import { seoService } from '@/services/SEOService';
 import { authenticateAdmin, requireRole } from '@/middleware/auth';
 import { ApiResponse, DashboardStats } from '@/types';
 import { logger } from '@/utils/logger';
@@ -333,6 +334,48 @@ router.get('/export/inquiries', requireRole(['admin']), async (req, res) => {
     res.status(500).json({
       success: false,
       error: 'Failed to export inquiries'
+    });
+  }
+});
+
+// SEO Management Routes
+router.get('/seo/stats', async (req, res) => {
+  try {
+    const stats = await seoService.getSEOStats();
+    
+    const response: ApiResponse = {
+      success: true,
+      data: stats
+    };
+
+    res.json(response);
+  } catch (error) {
+    logger.error('Get SEO stats error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to get SEO stats'
+    });
+  }
+});
+
+router.post('/seo/generate', requireRole(['admin']), async (req, res) => {
+  try {
+    // Start SEO generation in background
+    seoService.runSEOGeneration().catch(error => {
+      logger.error('Background SEO generation failed:', error);
+    });
+
+    const response: ApiResponse = {
+      success: true,
+      message: 'SEO generation started in background'
+    };
+
+    res.json(response);
+  } catch (error) {
+    logger.error('Start SEO generation error:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to start SEO generation'
     });
   }
 });

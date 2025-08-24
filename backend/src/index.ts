@@ -16,6 +16,7 @@ import adminRoutes from '@/routes/admin';
 import imageRoutes from '@/routes/images';
 import manufacturerRoutes from '@/routes/manufacturers';
 import modelRoutes from '@/routes/models';
+import { seoService } from '@/services/SEOService';
 
 dotenv.config();
 
@@ -135,10 +136,13 @@ async function startServer() {
     logger.info('Database connection established');
     
     app.listen(PORT, () => {
-      logger.info(`🚛 GPS Trucks Japan API server running on port ${PORT}`);
+      logger.info(`🚛 Japan Direct Trucks API server running on port ${PORT}`);
       logger.info(`🌐 Health check: http://localhost:${PORT}/health`);
       logger.info(`📚 API docs: http://localhost:${PORT}/api`);
       logger.info(`🖼️  Images served from: http://localhost:${PORT}/images`);
+      
+      // Start SEO generation service after server is running
+      seoService.startPeriodicSEOGeneration();
     });
   } catch (error) {
     logger.error('Failed to start server:', error);

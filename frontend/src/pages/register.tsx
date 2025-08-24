@@ -80,8 +80,10 @@ export default function RegisterPage() {
   return (
     <>
       <Head>
-        <title>Register - GPS Trucks Japan</title>
-        <meta name="description" content="Create an account with GPS Trucks Japan to save favorites, track inquiries, and get personalized service." />
+        <title>Register - Japan Direct Trucks | Create Account</title>
+        <meta name="description" content="Create your Japan Direct Trucks account to save favorite vehicles, track import inquiries, and get personalized assistance with your Japanese vehicle purchase." />
+        <meta name="keywords" content="register japan direct trucks, create account, vehicle favorites, japan car import account, vehicle export registration" />
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
 
       <Layout>

@@ -12,6 +12,14 @@ interface Vehicle {
   title_description: string;
   location_prefecture?: string;
   images?: Array<{ original_url: string; alt_text?: string }>;
+  seo_metadata?: {
+    title: string;
+    description: string;
+    keywords: string;
+    og_title?: string;
+    og_description?: string;
+    canonical_url?: string;
+  };
 }
 
 interface VehicleSEOProps {
@@ -46,27 +54,19 @@ export default function VehicleSEO({ vehicle }: VehicleSEOProps) {
   const price = formatPrice(vehicle.price_total_yen || vehicle.price_vehicle_yen);
   const mileage = formatMileage(vehicle.mileage_km);
 
-  // Generate title (keep under 60 chars)
-  const title = `Cheap ${year} ${make} ${model} Export - ${price} Japan to ${randomCountries.split(' ')[0]}`.substring(0, 58);
-
-  // Generate description (keep under 160 chars)
-  const description = `Cheapest ${year} ${make} ${model} export from Japan. ${mileage}, ${price}. Direct to ${randomCountries}. Only 10% markup. Save vs US prices.`.substring(0, 158);
-
-  // Generate keywords with location-based terms
-  const keywords = [
-    `cheap ${year} ${make.toLowerCase()} ${model.toLowerCase()}`,
-    `cheapest ${model.toLowerCase()} export japan`,
-    `${model.toLowerCase()} japan to usa`,
-    `${model.toLowerCase()} japan to australia`,
-    `${model.toLowerCase()} japan to uk`,
-    `${model.toLowerCase()} japan to kenya`,
-    `${model.toLowerCase()} japan to dubai`,
-    `${make.toLowerCase()} export japan ${randomCountries.toLowerCase()}`,
-    randomCountries.toLowerCase().split(' ').map(c => `japan to ${c} export`).join(', '),
-    `cheapest jdm exporter`,
-    `lowest price ${make.toLowerCase()}`,
-    `10 percent markup only`
-  ].join(', ');
+  // Use database metadata if available, otherwise use basic dynamic SEO
+  let title, description, keywords;
+  
+  if (vehicle.seo_metadata) {
+    title = vehicle.seo_metadata.title;
+    description = vehicle.seo_metadata.description;
+    keywords = vehicle.seo_metadata.keywords;
+  } else {
+    // Basic dynamic SEO with actual car details
+    title = `${year} ${make} ${model} Export from Japan - ${price} | Japan Direct Trucks`;
+    description = `Export ${year} ${make} ${model} from Japan. ${mileage}, ${price}. Direct export worldwide with full export assistance.`;
+    keywords = `${year} ${make.toLowerCase()} ${model.toLowerCase()}, ${make.toLowerCase()} export japan, japanese ${model.toLowerCase()}, ${model.toLowerCase()} for sale`;
+  }
 
   // Generate vehicle schema
   const vehicleSchema = {
@@ -123,8 +123,8 @@ export default function VehicleSEO({ vehicle }: VehicleSEOProps) {
       <meta name="keywords" content={keywords} />
       
       {/* Open Graph tags */}
-      <meta property="og:title" content={`${year} ${make} ${model} - Export Quality Japanese Vehicle`} />
-      <meta property="og:description" content={description} />
+      <meta property="og:title" content={vehicle.seo_metadata?.og_title || `${year} ${make} ${model} - Export Quality Japanese Vehicle`} />
+      <meta property="og:description" content={vehicle.seo_metadata?.og_description || description} />
       <meta property="og:type" content="product" />
       <meta property="og:url" content={`https://japandirecttrucks.com/vehicles/${vehicle.id}`} />
       <meta property="og:image" content={mainImage} />

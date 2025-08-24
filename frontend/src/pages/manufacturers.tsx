@@ -38,7 +38,11 @@ export default function ManufacturersPage() {
 
   if (loading) {
     return (
-      <Layout>
+      <Layout
+        title="Vehicle Manufacturers - Japan Direct Trucks"
+        description="Browse vehicles by top Japanese manufacturers including Toyota, Nissan, Honda, and more. Find your perfect Land Cruiser, Hilux, or JDM vehicle for export from Japan."
+        keywords="japanese vehicle manufacturers, toyota export japan, nissan export japan, honda export japan, japanese car brands, land cruiser manufacturers japan"
+      >
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
@@ -55,7 +59,10 @@ export default function ManufacturersPage() {
 
   if (error) {
     return (
-      <Layout>
+      <Layout
+        title="Error - Vehicle Manufacturers | Japan Direct Trucks"
+        description="Error loading vehicle manufacturers. Contact Japan Direct Trucks for assistance with your vehicle import needs."
+      >
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
@@ -67,7 +74,12 @@ export default function ManufacturersPage() {
   }
 
   return (
-    <Layout>
+    <Layout
+      title="Vehicle Manufacturers - Toyota, Nissan, Honda & More | Japan Direct Trucks"
+      description="Browse premium Japanese vehicles by top manufacturers. Toyota Land Cruisers, Nissan Patrols, Honda CRVs and more available for worldwide export from Japan."
+      keywords="japanese vehicle manufacturers, toyota land cruiser export, nissan patrol export, honda crv export, japanese car brands, vehicle manufacturers japan, toyota japan export, nissan japan export"
+      url="https://japandirecttrucks.com/manufacturers"
+    >
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Vehicle Brands</h1>

@@ -65,7 +65,10 @@ export default function ManufacturerPage() {
 
   if (loading) {
     return (
-      <Layout>
+      <Layout
+        title="Loading Manufacturer Models - Japan Direct Trucks"
+        description="Loading vehicle models from Japanese manufacturer inventory."
+      >
         <div className="container mx-auto px-4 py-8">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-200 rounded w-1/4 mb-8"></div>
@@ -82,7 +85,10 @@ export default function ManufacturerPage() {
 
   if (error) {
     return (
-      <Layout>
+      <Layout
+        title="Error - Manufacturer Models | Japan Direct Trucks"
+        description="Error loading manufacturer model information. Contact Japan Direct Trucks for assistance."
+      >
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Error</h1>
@@ -94,7 +100,12 @@ export default function ManufacturerPage() {
   }
 
   return (
-    <Layout>
+    <Layout
+      title={manufacturerName ? `${manufacturerName} Models Export from Japan | Japan Direct Trucks` : 'Manufacturer Models - Japan Direct Trucks'}
+      description={manufacturerName ? `Export ${manufacturerName} vehicles from Japan. Browse ${models.length} available models including Land Cruisers, trucks, and specialty vehicles.` : 'Browse vehicle models by manufacturer available for export from Japan.'}
+      keywords={manufacturerName ? `${manufacturerName.toLowerCase()} export japan, ${manufacturerName.toLowerCase()} models japan, japanese ${manufacturerName.toLowerCase()}, ${manufacturerName.toLowerCase()} vehicles japan` : 'manufacturer models japan, japanese vehicle models, car models japan export'}
+      url={`https://japandirecttrucks.com/manufacturers/${id}`}
+    >
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <Link

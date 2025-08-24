@@ -24,7 +24,11 @@ import { vehicleApi, utilityApi } from '@/lib/api';
 import { Vehicle } from '@/types';
 import { formatPrice, formatMileageWithMiles, getVehicleBadges, getPlaceholderImage } from '@/lib/utils';
 
-export default function VehicleDetailPage() {
+interface VehicleDetailPageProps {
+  initialVehicle?: Vehicle;
+}
+
+export default function VehicleDetailPage({ initialVehicle }: VehicleDetailPageProps) {
   const router = useRouter();
   const { id } = router.query;
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -32,14 +36,17 @@ export default function VehicleDetailPage() {
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
 
-  const { data: vehicle, isLoading, error } = useQuery(
+  // Use server-side data if available, otherwise fallback to client-side
+  const { data: clientVehicle, isLoading, error } = useQuery(
     ['vehicle', id],
     () => vehicleApi.getById(parseInt(id as string)),
     {
-      enabled: !!id,
+      enabled: !!id && !initialVehicle,
       staleTime: 5 * 60 * 1000, // 5 minutes
     }
   );
+
+  const vehicle = initialVehicle || clientVehicle;
 
   const { data: similarVehicles } = useQuery(
     ['similar-vehicles', id],
@@ -135,7 +142,6 @@ export default function VehicleDetailPage() {
 
   return (
     <>
-      <VehicleSEO vehicle={vehicle} />
       <Layout>
       <div className="bg-gray-50 min-h-screen">
         {/* Breadcrumb */}
@@ -269,7 +275,18 @@ export default function VehicleDetailPage() {
                       if (desc && desc.startsWith('{')) {
                         try {
                           const parsed = JSON.parse(desc);
-                          return parsed.description || desc;
+                          // Check for new format with market_data and description
+                          if (parsed.description) {
+                            return parsed.description;
+                          }
+                          // For old format, generate a descriptive text instead of showing raw JSON
+                          if (parsed.value_headline && parsed.key_benefits) {
+                            const benefits = Array.isArray(parsed.key_benefits) 
+                              ? parsed.key_benefits.slice(0, 3).join(', ') 
+                              : '';
+                            return `${parsed.value_headline}. Key advantages: ${benefits}. ${parsed.market_comparison || ''}`;
+                          }
+                          return desc;
                         } catch {
                           return desc;
                         }
@@ -799,7 +816,31 @@ export default function VehicleDetailPage() {
         price={formatPrice(priceUSD, 'USD')}
         type="floating"
       />
+      <VehicleSEO vehicle={vehicle} />
     </Layout>
     </>
   );
+}
+
+export async function getServerSideProps(context: any) {
+  const { id } = context.params;
+  
+  try {
+    // Fetch vehicle data directly from backend
+    const response = await fetch(`http://gps-trucks-backend:3002/api/vehicles/${id}`);
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { notFound: true };
+    }
+    
+    return {
+      props: {
+        initialVehicle: data.data
+      }
+    };
+  } catch (error) {
+    console.error('Failed to fetch vehicle data:', error);
+    return { notFound: true };
+  }
 }

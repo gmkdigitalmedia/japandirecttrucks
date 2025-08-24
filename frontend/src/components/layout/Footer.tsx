@@ -53,7 +53,7 @@ export default function Footer() {
                   Japan Direct Trucks
                 </span>
                 <div className="text-sm text-gray-400">
-                  American Car Hunter in Japan
+                  American Truck Exporter in Japan
                 </div>
               </div>
             </div>

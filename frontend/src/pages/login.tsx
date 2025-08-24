@@ -40,8 +40,10 @@ export default function LoginPage() {
   return (
     <>
       <Head>
-        <title>Login - GPS Trucks Japan</title>
-        <meta name="description" content="Login to your GPS Trucks Japan account to save favorites and manage your inquiries." />
+        <title>Login - Japan Direct Trucks | Account Access</title>
+        <meta name="description" content="Login to your Japan Direct Trucks account to save favorite vehicles, track inquiries, and manage your vehicle import process from Japan." />
+        <meta name="keywords" content="login japan direct trucks, account access, vehicle favorites, import tracking, japan car export login" />
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
 
       <Layout>

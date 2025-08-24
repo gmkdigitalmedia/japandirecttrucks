@@ -80,8 +80,9 @@ export default function ContactPage() {
   if (submitted) {
     return (
       <Layout
-        title="Message Sent - Japan Direct Trucks"
-        description="Thank you for contacting Japan Direct Trucks. We'll get back to you soon."
+        title="Message Sent - Contact Japan Direct Trucks"
+        description="Thank you for contacting Japan Direct Trucks. We've received your inquiry about importing vehicles from Japan and will respond within 24 hours."
+        keywords="contact japan direct trucks, vehicle import inquiry, japan car export contact, land cruiser import contact"
       >
         <div className="bg-gray-50 min-h-screen">
           <div className="container mx-auto px-4 py-16">
@@ -133,8 +134,10 @@ export default function ContactPage() {
 
   return (
     <Layout
-      title="Contact Us - Japan Direct Trucks"
-      description="Contact Japan Direct Trucks for Japanese vehicle exports. Expert assistance with vehicle sourcing, shipping, and export documentation worldwide."
+      title="Contact Japan Direct Trucks - Vehicle Import Specialists | Get Free Quote"
+      description="Contact Japan Direct Trucks for professional vehicle import services. American-owned exporter in Japan. Get free quotes on Land Cruisers, Hilux, and JDM vehicles. WhatsApp +81-70-9310-1930."
+      keywords="contact japan direct trucks, japan vehicle import contact, land cruiser export contact, japan car import inquiry, vehicle export japan contact, whatsapp japan cars, american exporter japan contact, free vehicle quote japan"
+      url="https://japandirecttrucks.com/contact"
     >
       <div className="bg-gray-50 min-h-screen">
         <div className="container mx-auto px-4 py-8">

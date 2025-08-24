@@ -14,7 +14,7 @@ interface LayoutProps {
 
 export default function Layout({
   children,
-  title = 'Japan Direct Trucks - American Car Hunter in Japan',
+  title = '#1 Toyota Landcruiser Export from Japan - Japan Direct Trucks | American Owned',
   description = 'Find and export premium Japanese vehicles worldwide. Specializing in Land Cruisers, luxury SUVs, and commercial vehicles with full export assistance.',
   keywords = 'Japanese cars, Land Cruiser, Toyota, export, used cars Japan, SUV, trucks, vehicle export',
   image = '/images/og-image.jpg',

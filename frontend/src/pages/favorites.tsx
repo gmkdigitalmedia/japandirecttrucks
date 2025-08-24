@@ -86,8 +86,10 @@ export default function FavoritesPage() {
   return (
     <>
       <Head>
-        <title>My Favorites - GPS Trucks Japan</title>
-        <meta name="description" content="View and manage your favorite vehicles on GPS Trucks Japan." />
+        <title>My Favorites - Japan Direct Trucks | Saved Vehicles</title>
+        <meta name="description" content="View and manage your favorite Japanese vehicles. Track saved Land Cruisers, Hilux, and JDM cars for export from Japan." />
+        <meta name="keywords" content="favorite vehicles japan, saved cars japan, land cruiser favorites, vehicle watchlist japan, japan car export favorites" />
+        <meta name="robots" content="noindex, nofollow" />
       </Head>
 
       <Layout>
