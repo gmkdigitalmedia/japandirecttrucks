@@ -1,4 +1,6 @@
 manufacturer,model,carsensor_url,page2_url,enabled,min_year,max_pages,priority,notes
+Suzuki,Jimny Nomad,https://www.carsensor.net/usedcar/bSZ/s060/index2.html,https://www.carsensor.net/usedcar/bSZ/s060/index2.html,true,1990,10,1,Compact off-road
+Suzuki,Jimny,https://www.carsensor.net/usedcar/bSZ/s010/index.html,https://www.carsensor.net/usedcar/bSZ/s010/index2.html,true,1990,10,2,Compact off-road
 Mitsubishi,Delica Star Wagon,https://www.carsensor.net/usedcar/index.html?STID=CS210610&AR=1*7&BRDC=&CARC=MI_S049&NINTEI=&CSHOSHO=,,true,1990,10,18,Classic van
 Mitsubishi,Pajero,https://www.carsensor.net/usedcar/bMI/s012/index.html?AR=1%2A7,https://www.carsensor.net/usedcar/bMI/s012/index2.html?AR=1%2A7,true,1990,10,19,Off-road SUV
 Mitsubishi,Triton,https://www.carsensor.net/usedcar/bMI/s088/index.html?AR=1%2A7,https://www.carsensor.net/usedcar/bMI/s088/index2.html?AR=1%2A7,true,1990,10,20,Pickup truck

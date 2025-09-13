@@ -1,0 +1,46 @@
+# Scraper files (not needed in production containers)
+scrapers/
+*.py
+*.csv
+*.xlsx
+
+# Development files
+*.log
+*.pid
+*.seed
+*.pid.lock
+.env.local
+.env.development
+
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Test files
+test/
+tests/
+*.test.js
+*.spec.js
+
+# CI/CD
+.github/
+cloudbuild.yaml
+deploy-gcp.sh
+setup-gcp.sh
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor directories
+.vscode/
+.idea/
+
+# Docker files (not needed inside containers)
+docker-compose*.yml
+Dockerfile*

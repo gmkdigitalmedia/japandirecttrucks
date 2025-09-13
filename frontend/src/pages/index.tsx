@@ -49,6 +49,24 @@ const categories = [
     manufacturer: 'Toyota',
     model: 'Hilux Surf',
   },
+  {
+    name: 'Porsche Cayenne',
+    description: 'Luxury performance SUV - German engineering with Japanese reliability',
+    manufacturer: 'Porsche',
+    model: 'Cayenne',
+  },
+  {
+    name: 'Daihatsu Hijet',
+    description: 'Kei truck - Compact commercial vehicle perfect for work and farm use',
+    manufacturer: 'Daihatsu',
+    model: 'Hijet',
+  },
+  {
+    name: 'Suzuki Jimny',
+    description: 'Compact 4WD - Small but capable off-roader, perfect for city and trails',
+    manufacturer: 'Suzuki',
+    model: 'Jimny',
+  },
 ];
 
 const processSteps = [

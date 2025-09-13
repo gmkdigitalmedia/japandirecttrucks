@@ -50,8 +50,17 @@ export default function DefaultSEO({
       { "@type": "Country", "name": "Philippines" }
     ],
     "instrument": {
-      "@type": "Vehicle",
-      "vehicleType": ["Land Cruiser", "Hilux", "FJ Cruiser", "Hijet", "JDM Cars"]
+      "@type": "Product",
+      "name": "Japanese Vehicles",
+      "description": "Toyota Land Cruiser, Hilux, FJ Cruiser, Hijet, and other JDM vehicles from Japan",
+      "category": "Vehicle",
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "USD",
+        "lowPrice": "15000",
+        "highPrice": "100000",
+        "availability": "https://schema.org/InStock"
+      }
     }
   };
 

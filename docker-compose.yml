@@ -71,7 +71,7 @@ services:
     container_name: gps-trucks-frontend
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3002
-      NODE_ENV: production
+      NODE_ENV: development
     ports:
       - "3000:3000"
     volumes:
