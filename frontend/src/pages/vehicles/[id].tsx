@@ -2,17 +2,19 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
 import Link from 'next/link';
-import { 
-  ArrowLeftIcon, 
-  CalendarIcon, 
-  CogIcon, 
+import {
+  ArrowLeftIcon,
+  CalendarIcon,
+  CogIcon,
   GlobeAltIcon,
   ShieldCheckIcon,
   TruckIcon,
   CurrencyYenIcon,
   PhoneIcon,
-  EnvelopeIcon
+  EnvelopeIcon,
+  HeartIcon
 } from '@heroicons/react/24/outline';
+import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import Layout from '@/components/layout/Layout';
 import Button from '@/components/ui/Button';
 import Badge from '@/components/ui/Badge';
@@ -23,6 +25,7 @@ import WhatsAppQuickActions from '@/components/whatsapp/WhatsAppQuickActions';
 import { vehicleApi, utilityApi } from '@/lib/api';
 import { Vehicle } from '@/types';
 import { formatPrice, formatMileageWithMiles, getVehicleBadges, getPlaceholderImage } from '@/lib/utils';
+import { useFavorites } from '@/hooks/useFavorites';
 
 interface VehicleDetailPageProps {
   initialVehicle?: Vehicle;
@@ -35,6 +38,7 @@ export default function VehicleDetailPage({ initialVehicle }: VehicleDetailPageP
   const [exchangeRate, setExchangeRate] = useState(0.0067);
   const [showInquiryForm, setShowInquiryForm] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
+  const { isFavorited, toggleFavorite, loading: favoriteLoading } = useFavorites();
 
   // Use server-side data if available, otherwise fallback to client-side
   const { data: clientVehicle, isLoading, error } = useQuery(
@@ -333,6 +337,20 @@ export default function VehicleDetailPage({ initialVehicle }: VehicleDetailPageP
                   >
                     <EnvelopeIcon className="h-5 w-5 mr-2" />
                     Email Inquiry
+                  </Button>
+                  <Button
+                    variant={isFavorited(vehicle.id) ? "primary" : "outline"}
+                    size="lg"
+                    onClick={() => toggleFavorite(vehicle.id)}
+                    disabled={favoriteLoading}
+                    className="w-full"
+                  >
+                    {isFavorited(vehicle.id) ? (
+                      <HeartSolidIcon className="h-5 w-5 mr-2 text-red-500" />
+                    ) : (
+                      <HeartIcon className="h-5 w-5 mr-2" />
+                    )}
+                    {isFavorited(vehicle.id) ? 'Saved to Favorites' : 'Save to Favorites'}
                   </Button>
                 </div>
               </div>

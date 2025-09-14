@@ -19,7 +19,7 @@ export const useFavorites = () => {
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:8000/api/favorites', {
+      const response = await fetch('/api/favorites', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export const useFavorites = () => {
     try {
       if (isFavorited) {
         // Remove from favorites
-        const response = await fetch(`http://localhost:8000/api/favorites/${vehicleId}`, {
+        const response = await fetch(`/api/favorites/${vehicleId}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -68,7 +68,7 @@ export const useFavorites = () => {
         }
       } else {
         // Add to favorites
-        const response = await fetch('http://localhost:8000/api/favorites', {
+        const response = await fetch('/api/favorites', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

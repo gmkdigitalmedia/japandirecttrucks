@@ -1,0 +1,26 @@
+# Node modules
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Images folder (too large)
+images/
+uploads/
+
+# Environment files
+.env
+.env.local
+
+# Git
+.git/
+.gitignore
+
+# Tests
+*.test.js
+*.spec.js
+coverage/
+
+# Misc
+.DS_Store
+*.log
