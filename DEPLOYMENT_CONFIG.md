@@ -53,15 +53,35 @@ When moving to Cloudflare/production domain:
 
 ### Database Access
 
+#### Database Location
+- **Service**: PostgreSQL 15 (Alpine Linux)
+- **Running in**: Docker container on Google Cloud VM
+- **Company**: Google Cloud Platform (Compute Engine)
+- **Container Name**: gp_postgres_1
+- **Data Storage**: Docker volume on VM disk
+- **Connection**: Direct TCP/IP on port 5432 (protected by firewall)
+
 #### From Scrapers (Local Machine)
 ```python
 # Remote connection string for scrapers
 DATABASE_URL = "postgresql://gp:Megumi12@34.29.174.102:5432/gps_trucks_japan"
 ```
 
-**Files created for remote scraping**:
+**Files created for remote operations**:
 - `scrapers/universal_scraper_remote.py` - Scraper that updates remote DB
 - `scrapers/check_data_remote.py` - Check remote DB contents
+- `real_ai_analyzer_remote.py` - AI description generator for remote DB
+
+#### AI Description Generation
+- **Script**: `real_ai_analyzer.py` (and `real_ai_analyzer_remote.py` for remote)
+- **AI Provider**: OpenAI
+- **Model**: GPT-4o-mini
+- **Function**: Generates compelling vehicle descriptions and market analysis
+- **Features**:
+  - Calculates USA market prices and savings
+  - Creates detailed, sales-oriented descriptions
+  - Processes vehicles automatically when added to database
+  - Includes market analysis and export benefits
 
 #### Firewall Rules
 - **allow-postgres-scraper**: Allows PostgreSQL (5432) from 211.7.120.148 (your IP)
