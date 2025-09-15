@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useQuery } from 'react-query';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeftIcon,
   CalendarIcon,
@@ -166,16 +167,17 @@ export default function VehicleDetailPage({ initialVehicle }: VehicleDetailPageP
             {/* Images Gallery */}
             <div className="space-y-4">
               {/* Main Image */}
-              <div className="aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden cursor-pointer" onClick={() => setShowImageModal(true)}>
+              <div className="relative aspect-w-16 aspect-h-12 bg-gray-200 rounded-lg overflow-hidden cursor-pointer" onClick={() => setShowImageModal(true)}>
                 {vehicleImages.length > 0 && vehicleImages[selectedImageIndex]?.url ? (
-                  <img
+                  <Image
                     src={vehicleImages[selectedImageIndex].url}
                     alt={vehicleImages[selectedImageIndex].alt_text || vehicle.title_description}
-                    className="object-cover w-full h-full"
-                    onError={(e) => {
-                      const target = e.target as HTMLImageElement;
-                      target.src = getPlaceholderImage(800, 600);
-                    }}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
+                    className="object-cover"
+                    priority={true}
+                    placeholder="blur"
+                    blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                   />
                 ) : (
                   <div className="w-full h-full bg-gray-200 flex items-center justify-center">
@@ -225,17 +227,19 @@ export default function VehicleDetailPage({ initialVehicle }: VehicleDetailPageP
                           setSelectedImageIndex(index);
                           setShowImageModal(true);
                         }}
-                        className={`aspect-w-16 aspect-h-12 bg-gray-200 rounded overflow-hidden border-2 transition-colors hover:border-primary-300 ${
+                        className={`relative aspect-w-16 aspect-h-12 bg-gray-200 rounded overflow-hidden border-2 transition-colors hover:border-primary-300 ${
                           selectedImageIndex === index ? 'border-primary-500' : 'border-transparent'
                         }`}
                       >
-                        <img
+                        <Image
                           src={image.url}
                           alt={image.alt_text || `${vehicle.title_description} ${index + 1}`}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = '/images/placeholder-vehicle.jpg';
-                          }}
+                          fill
+                          sizes="100px"
+                          className="object-cover"
+                          loading="lazy"
+                          placeholder="blur"
+                          blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAb/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWEREiMxUf/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                         />
                       </button>
                     ))}
