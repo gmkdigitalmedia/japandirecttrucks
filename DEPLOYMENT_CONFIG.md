@@ -2,11 +2,16 @@
 
 ## Current Deployment Status (as of Sep 15, 2025)
 
+### LIVE PRODUCTION SITE
+- **Domain**: https://japandirecttrucks.com
+- **Status**: ✅ LIVE via Cloudflare
+
 ### Google Cloud VM
 - **IP Address**: 34.29.174.102
 - **Zone**: us-central1-a
 - **Name**: gps-trucks-vm
 - **Status**: Running with Docker containers
+- **Cloudflare**: Proxying with SSL (Flexible mode)
 
 ### Services Running
 
@@ -158,6 +163,9 @@ sudo docker restart gp_backend_1
 # Database access from local
 PGPASSWORD=Megumi12 psql -h 34.29.174.102 -U gp -d gps_trucks_japan
 
+# Run AI analyzer (from local, updates remote DB)
+python3 ai_analyzer_continuous.py
+
 # Run remote scraper
 cd scrapers
 python3 universal_scraper_remote.py
@@ -165,6 +173,13 @@ python3 universal_scraper_remote.py
 # Check remote data
 python3 check_data_remote.py
 ```
+
+### Local Development Shutdown
+Since local Docker containers are shut down, all operations now run through:
+1. **Remote database** on Google Cloud VM (34.29.174.102)
+2. **AI analyzer** runs locally but updates remote DB
+3. **Scrapers** run locally but update remote DB
+4. **.env file** configured for remote database connection
 
 ### Git Branches
 - **production**: Current deployment branch
