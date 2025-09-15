@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from '@/contexts/AuthContext';
 import GoogleAnalytics from '@/components/GoogleAnalytics';
+import LoadingBar from '@/components/ui/LoadingBar';
 import '@/styles/globals.css';
 
 const queryClient = new QueryClient({
@@ -19,6 +20,7 @@ export default function App({ Component, pageProps }: AppProps) {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <LoadingBar />
         <Component {...pageProps} />
         <Toaster
           position="top-right"
