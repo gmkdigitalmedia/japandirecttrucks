@@ -73,15 +73,28 @@ DATABASE_URL = "postgresql://gp:Megumi12@34.29.174.102:5432/gps_trucks_japan"
 - `real_ai_analyzer_remote.py` - AI description generator for remote DB
 
 #### AI Description Generation
-- **Script**: `real_ai_analyzer.py` (and `real_ai_analyzer_remote.py` for remote)
-- **AI Provider**: OpenAI
-- **Model**: GPT-4o-mini
-- **Function**: Generates compelling vehicle descriptions and market analysis
-- **Features**:
-  - Calculates USA market prices and savings
-  - Creates detailed, sales-oriented descriptions
-  - Processes vehicles automatically when added to database
-  - Includes market analysis and export benefits
+There are multiple AI analyzer scripts:
+
+1. **`ai_analyzer_continuous.py`** (Main production script)
+   - **Model**: GPT-3.5-turbo (cheaper - $0.50 per 1M tokens)
+   - **Function**: Runs continuously, monitoring for new vehicles
+   - **Uses**: Environment variables for configuration
+
+2. **`real_ai_analyzer.py`** / `real_ai_analyzer_remote.py`
+   - **Model**: GPT-4o-mini (higher quality - $2.50 per 1M tokens)
+   - **Function**: Can be run manually for better descriptions
+   - **Features**: More detailed market analysis
+
+3. **`scrapers/ai_vehicle_analyzer.py`**
+   - **No AI**: Uses calculations only (no OpenAI)
+   - **Function**: Generates competitive advantage analysis
+   - **Features**: Calculates USA market prices and mileage comparisons
+
+All scripts:
+- Calculate USA market prices and savings
+- Create sales-oriented descriptions
+- Process vehicles automatically when added to database
+- Include market analysis and export benefits
 
 #### Firewall Rules
 - **allow-postgres-scraper**: Allows PostgreSQL (5432) from 211.7.120.148 (your IP)
