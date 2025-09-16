@@ -5,29 +5,27 @@ function SiteMap() {
 }
 
 export const getServerSideProps: GetServerSideProps = async ({ res }) => {
-  // Get all vehicles from the backend API
-  const baseUrl = process.env.NODE_ENV === 'production' 
-    ? 'https://japandirecttrucks.com' 
-    : 'http://gps-trucks-backend:3002';
+  // Static pages - moved outside try/catch to fix scope bug
+  const staticPages = [
+    '',
+    '/vehicles',
+    '/manufacturers',
+    '/about',
+    '/contact',
+    '/export-process',
+    '/login',
+    '/register'
+  ];
+
+  // Get all vehicles from the backend API - use backend container IP
+  const baseUrl = 'http://172.18.0.4:8000';
 
   try {
     // Fetch all vehicle IDs
     const response = await fetch(`${baseUrl}/api/vehicles/sitemap`);
     const data = await response.json();
-    
+
     const vehicles = data.success ? data.data : [];
-    
-    // Static pages
-    const staticPages = [
-      '',
-      '/vehicles',
-      '/manufacturers', 
-      '/about',
-      '/contact',
-      '/export-process',
-      '/login',
-      '/register'
-    ];
 
     // Generate sitemap XML
     const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

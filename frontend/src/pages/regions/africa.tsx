@@ -65,6 +65,7 @@ export default function AfricaPage() {
         country="Africa"
         description="Japanese Toyota export to Africa. Land Cruisers proven for African roads. Ships to Kenya, South Africa, Nigeria, Tanzania."
       />
+      <Head>
         <title>Japanese Toyota Land Cruisers for Africa - Export to Kenya, South Africa, Nigeria | Japan Direct Trucks</title>
         <meta name="description" content="Export Japanese Toyota Land Cruisers & Hilux to Africa. Save 40-50% vs local dealers. Proven durability for African roads. Ships to Kenya, South Africa, Nigeria, Tanzania with flexible payment terms." />
         <meta name="keywords" content="japanese trucks africa, toyota land cruiser africa, hilux africa export, kenya vehicle import, south africa toyota import, nigeria land cruiser, tanzania hilux, african toyota parts, rhd vehicles africa" />

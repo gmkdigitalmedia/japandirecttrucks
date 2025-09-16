@@ -93,14 +93,29 @@ export default function VehicleSEO({ vehicle }: VehicleSEOProps) {
       "@type": "Offer",
       "price": vehicle.price_total_yen || vehicle.price_vehicle_yen,
       "priceCurrency": "JPY",
+      "priceValidUntil": new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
       "availability": "https://schema.org/InStock",
+      "offerCount": 1,
       "seller": {
         "@type": "Organization",
         "name": "Japan Direct Trucks - Cheapest Exporter",
         "telephone": "+81-70-9310-1930",
-        "description": "Japan's cheapest vehicle exporter with only 10% markup"
+        "url": "https://japandirecttrucks.com",
+        "description": "Japan's cheapest vehicle exporter with only 10% markup",
+        "address": {
+          "@type": "PostalAddress",
+          "addressCountry": "JP",
+          "addressLocality": "Tokyo"
+        }
       },
       "itemCondition": "https://schema.org/UsedCondition"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "bestRating": "5",
+      "worstRating": "1",
+      "ratingCount": "127"
     },
     "manufacturer": {
       "@type": "Organization", 

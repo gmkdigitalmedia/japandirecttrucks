@@ -243,7 +243,7 @@ export default function HomePage() {
               <h1 className="text-2xl sm:text-4xl lg:text-6xl font-bold font-display text-balance">
                 #1 Toyota Landcruiser Export from Japan
               </h1>
-              <p className="text-lg sm:text-xl text-yellow-400 mt-2">American-owned exporter with direct access to Japan's exclusive auctions</p>
+              <p className="text-lg sm:text-xl text-yellow-400 mt-2">our AI price and mileage valuations let you know the best deals!</p>
             </div>
             <p className="text-lg sm:text-xl lg:text-2xl mb-4 md:mb-6 text-gray-200 text-balance max-w-3xl mx-auto">
               Skip the middleman. Get premium Landcruisers, Hilux, and JDM legends 
