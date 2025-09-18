@@ -18,8 +18,20 @@ git checkout production
 docker-compose up -d postgres redis backend
 ```
 
-## Step 3: Download Database from GCP
+## Step 3: Database Setup
+
+⚠️ **IMPORTANT**: Due to schema differences between local and GCP databases, direct import may fail.
+
+### Option A: Start with Clean Database (Recommended)
 ```bash
+# Database will be created automatically with proper schema
+# Backend will initialize empty tables
+# You can run your scraper later to populate with fresh data
+```
+
+### Option B: Try GCP Import (Advanced - May Fail)
+```bash
+# Only attempt if you're comfortable with database debugging
 # Create fresh database backup from GCP (5,289+ vehicles)
 docker run --rm -e PGPASSWORD=Megumi12 postgres:15-alpine pg_dump \
   -h 34.29.174.102 -U gp -d gps_trucks_japan > database_backup.sql
@@ -27,8 +39,14 @@ docker run --rm -e PGPASSWORD=Megumi12 postgres:15-alpine pg_dump \
 # Wait for PostgreSQL to be ready (about 10 seconds)
 sleep 10
 
-# Import database to local PostgreSQL
+# Try importing (may fail due to schema differences)
 docker exec -i gps-trucks-db psql -U gp -d gps_trucks_japan < database_backup.sql
+```
+
+### Option C: Import Sample Data (Safe)
+```bash
+# If you have a local backup file that matches your schema
+# docker exec -i gps-trucks-db psql -U gp -d gps_trucks_japan < your_backup.sql
 ```
 
 ## Step 4: Start Frontend
@@ -39,11 +57,25 @@ docker-compose up -d frontend
 ## Step 5: Verify Deployment
 - **Website**: http://localhost:3000
 - **API**: http://localhost:3002/api/vehicles?limit=5
-- **Database**: Should have 5,000+ vehicles
+- **Database**: May have 0 vehicles initially (run scraper to populate)
+
+**If database is empty:**
+- Site will still work perfectly with all loading animations
+- Search will return "No vehicles found"
+- Run your vehicle scraper to populate with fresh data
 
 ## Features Included
-✅ 5,289+ vehicles from production database
-✅ Loading animations and progress bars
+✅ All loading animations and progress bars
+✅ Page transition spinners and LoadingBar
+✅ Vehicle search with loading states
+✅ Image loading optimizations
+✅ Complete frontend/backend application
+✅ Database schema ready for vehicle data
+
+**Database Notes:**
+- Schema differences prevent direct GCP import
+- Start with empty database and use scraper to populate
+- This ensures full compatibility and gets latest vehicles
 ✅ Page transition spinners
 ✅ Vehicle search with loading states
 ✅ Image loading optimizations
