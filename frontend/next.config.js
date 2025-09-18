@@ -26,7 +26,7 @@ const nextConfig = {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3002',
   },
   async rewrites() {
-    const backendHost = 'gp_backend_1:8000';
+    const backendHost = 'gps-trucks-backend:3002';
 
     return [
       {

@@ -17,8 +17,8 @@ export const getServerSideProps: GetServerSideProps = async ({ res }) => {
     '/register'
   ];
 
-  // Get all vehicles from the backend API - use backend container IP
-  const baseUrl = 'http://172.18.0.4:8000';
+  // Get all vehicles from the backend API - force backend container
+  const baseUrl = 'http://backend:3002';
 
   try {
     // Fetch all vehicle IDs
