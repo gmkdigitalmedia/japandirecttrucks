@@ -20,7 +20,7 @@ docker-compose up -d postgres redis backend
 
 ## Step 3: Database Setup
 
-⚠️ **IMPORTANT**: Due to schema differences between local and GCP databases, direct import may fail.
+⚠️ **CRITICAL**: Database schema incompatibility prevents direct GCP import. See `DATABASE_MIGRATION.md` for full details.
 
 ### Option A: Start with Clean Database (Recommended)
 ```bash
@@ -73,9 +73,11 @@ docker-compose up -d frontend
 ✅ Database schema ready for vehicle data
 
 **Database Notes:**
-- Schema differences prevent direct GCP import
-- Start with empty database and use scraper to populate
-- This ensures full compatibility and gets latest vehicles
+- **Schema Incompatibility**: GCP has evolved with AI/SEO columns not in local schema
+- **Import Failures**: Missing columns (`ai_description`, `seo_metadata`) cause errors
+- **Vehicle Count Gap**: GCP has 5,289+ vehicles vs local 4,198
+- **Solution**: Use scraper to populate locally OR manually fix schema first
+- **See**: `DATABASE_MIGRATION.md` for complete technical details and solutions
 ✅ Page transition spinners
 ✅ Vehicle search with loading states
 ✅ Image loading optimizations
